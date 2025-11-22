@@ -1,0 +1,259 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║   AIR PLAYER APPLIANCE BUILDER - FILE INDEX                          ║
+║   Complete Package Documentation Navigator                           ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ START HERE                                                             │
+└───────────────────────────────────────────────────────────────────────┘
+
+→ README.txt (15KB)
+  Overview, philosophy, quick start, troubleshooting
+  READ THIS FIRST if you're new
+  Time: 10 minutes
+
+→ QUICK_REFERENCE.txt (16KB)
+  Quick workflow overview and command reference
+  Keep this handy during installation
+  Time: Quick lookup as needed
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ INSTALLATION GUIDE                                                     │
+└───────────────────────────────────────────────────────────────────────┘
+
+→ SETUP_GUIDE.md (28KB) ⭐ MAIN INSTALLATION GUIDE
+  Complete step-by-step instructions
+  Detailed appendices
+  Comprehensive troubleshooting
+  Read while installing
+  Time: 30 minutes + installation time
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ CORE FILES (REQUIRED)                                                 │
+└───────────────────────────────────────────────────────────────────────┘
+
+→ install.sh (17KB) ⭐ THE INSTALLATION SCRIPT
+  Run this on your Raspberry Pi
+  
+→ install.properties (NOT INCLUDED - you create/edit this)
+  Your configuration file
+  Edit before installation
+
+→ Air Player 5.0 Linux ARM-64.zip (NOT INCLUDED - you provide)
+  From Sim Innovations
+  Required for installation
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ READING PATHS BY USE CASE                                             │
+└───────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════
+PATH 1: BRAND NEW USER
+═══════════════════════════════════════════════════════════════════════
+
+1. README.txt
+   → Understand what this is and why it exists
+   
+2. QUICK_REFERENCE.txt
+   → See the workflow and common commands
+   
+3. SETUP_GUIDE.md
+   → Follow step-by-step to install
+   → Reference appendices as needed
+
+RESULT: Working Air Player appliance in 17 minutes
+
+═══════════════════════════════════════════════════════════════════════
+PATH 2: TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════
+
+1. QUICK_REFERENCE.txt → Troubleshooting section
+   → Quick checks for common issues
+   
+2. SETUP_GUIDE.md → Troubleshooting section
+   → Detailed solutions for specific problems
+   
+3. SETUP_GUIDE.md → Relevant Appendix
+   → Appendix C: Power supply issues
+   → Appendix D: Display configuration
+   → Appendix E: Network issues
+   
+4. Consider fresh rebuild
+   → 17 minutes, guaranteed clean state
+
+RESULT: Issue resolved or system rebuilt
+
+═══════════════════════════════════════════════════════════════════════
+PATH 3: QUICK REFERENCE ONLY
+═══════════════════════════════════════════════════════════════════════
+
+→ QUICK_REFERENCE.txt
+  Everything you need on one page:
+  - Installation workflow
+  - Verification commands
+  - Common commands
+  - Troubleshooting quick checks
+  - Display examples
+
+Keep this file open in a terminal while working.
+
+RESULT: Fast access to all common tasks
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ FILE SUMMARIES                                                         │
+└───────────────────────────────────────────────────────────────────────┘
+
+README.txt (15KB)
+  What:     Overview, philosophy, features
+  For:      Everyone
+  When:     First read
+  Contains: Quick start, security features, troubleshooting basics
+
+QUICK_REFERENCE.txt (16KB)
+  What:     One-page reference card
+  For:      Everyone
+  When:     During and after installation
+  Contains: Commands, workflows, quick checks
+
+SETUP_GUIDE.md (28KB) ⭐
+  What:     Complete installation instructions
+  For:      Everyone installing
+  When:     During installation
+  Contains: Step-by-step, troubleshooting, detailed appendices
+
+install.sh (17KB)
+  What:     The installation script
+  For:      Raspberry Pi
+  When:     During installation
+  Contains: All automation, well-commented code
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ DOCUMENTATION STATISTICS                                               │
+└───────────────────────────────────────────────────────────────────────┘
+
+Total Files:           4 documentation files + install.sh
+Total Size:            ~90KB
+Reading Time:          ~45 minutes (all documents)
+Installation Time:     17 minutes (following guide)
+
+Coverage:
+  ✓ Complete step-by-step installation
+  ✓ Detailed appendices
+  ✓ Comprehensive troubleshooting
+  ✓ Deployment methods (screen/tmux)
+  ✓ Verification procedures
+  ✓ Command references
+  ✓ Examples and use cases
+  ✓ Security information
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ RECOMMENDED READING ORDER                                              │
+└───────────────────────────────────────────────────────────────────────┘
+
+FOR FIRST-TIME INSTALLATION:
+
+Step 1: Read (20 minutes)
+  □ README.txt (10 min)
+  □ QUICK_REFERENCE.txt (10 min)
+
+Step 2: Prepare (15 minutes)
+  □ Edit install.properties
+  □ Generate SSH keys (if needed)
+  □ Download Raspberry Pi Imager
+  □ Gather hardware
+
+Step 3: Image SD Card (5 minutes)
+  □ Follow SETUP_GUIDE.md Step 1
+  □ Configure OS customization
+  □ Write image
+
+Step 4: Install (17 minutes)
+  □ Follow SETUP_GUIDE.md Steps 2-8
+  □ Use screen or tmux method
+  □ Verify after installation
+
+Step 5: Reference (ongoing)
+  □ Keep QUICK_REFERENCE.txt handy
+  □ Refer to SETUP_GUIDE.md appendices as needed
+
+TOTAL TIME: ~57 minutes (including reading)
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ PRINT RECOMMENDATIONS                                                  │
+└───────────────────────────────────────────────────────────────────────┘
+
+If you like paper documentation:
+
+PRINT THESE:
+  □ QUICK_REFERENCE.txt (16KB, ~6 pages)
+    Keep at your workstation
+    
+  □ SETUP_GUIDE.md (28KB, ~15 pages)
+    Follow along during installation
+
+OPTIONAL:
+  □ README.txt (15KB, ~5 pages)
+    Good overview reference
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ VERSION CONTROL RECOMMENDATIONS                                        │
+└───────────────────────────────────────────────────────────────────────┘
+
+Put these in version control (git):
+  □ install.sh
+  □ install.properties (your customized version)
+  □ All documentation (for reference)
+
+Track changes to:
+  □ install.properties (your network/display settings)
+  □ Any customizations to install.sh
+
+Benefits:
+  ✓ Track configuration changes
+  ✓ Easy rollback to working config
+  ✓ Share with team members
+  ✓ Document why changes were made
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ SUPPORT & HELP                                                         │
+└───────────────────────────────────────────────────────────────────────┘
+
+Having issues? Check in this order:
+
+1. QUICK_REFERENCE.txt → Troubleshooting
+2. SETUP_GUIDE.md → Troubleshooting section
+3. SETUP_GUIDE.md → Relevant Appendix
+4. Consider fresh rebuild (17 minutes)
+
+Still stuck?
+  - Review verification commands
+  - Check all prerequisites
+  - Verify hardware (especially power supply)
+  - Try console installation instead of remote
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ USEFUL LINKS & RESOURCES                                               │
+└───────────────────────────────────────────────────────────────────────┘
+
+Documentation:
+  README.txt          - Overview and philosophy
+  SETUP_GUIDE.md      - Complete step-by-step guide
+  QUICK_REFERENCE.txt - Quick reference card
+
+Raspberry Pi:
+  Imager:  https://www.raspberrypi.com/software/
+  Forums:  https://forums.raspberrypi.com/
+  Docs:    https://www.raspberrypi.com/documentation/
+
+Air Player:
+  Website: https://www.siminnovations.com/
+  Support: https://www.siminnovations.com/support
+
+Power Supply:
+  Official: Raspberry Pi 27W USB-C PSU
+  Industrial: Mean Well LRS-150F-5
+
+╔═══════════════════════════════════════════════════════════════════════╗
+║  For detailed instructions, see SETUP_GUIDE.md                        ║
+║  Hardened build for security-conscious deployments                    ║
+╚═══════════════════════════════════════════════════════════════════════╝

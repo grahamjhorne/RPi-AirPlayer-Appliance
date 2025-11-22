@@ -1,0 +1,323 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║     AIR PLAYER APPLIANCE BUILDER - QUICK REFERENCE                   ║
+║     Raspberry Pi 5 Hardened Flight Simulator Display                 ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ ONE-TIME SETUP WORKFLOW                                                │
+└───────────────────────────────────────────────────────────────────────┘
+
+1. IMAGE MICROSD
+   Raspberry Pi Imager:
+   - Device: Raspberry Pi 5
+   - OS: Raspberry Pi OS Lite (64-bit)
+   - Edit Settings:
+     * Hostname: instruments
+     * User: airman
+     * SSH: Public key only
+     * NO wireless LAN
+     * Locale: Your timezone/keyboard
+
+2. FIRST BOOT
+   - Insert card, connect ethernet + power
+   - Note IP address from screen
+
+3. COPY FILES
+   zip airplayer-install.zip install.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+   scp airplayer-install.zip airman@<DHCP-IP>:.
+
+4. RUN INSTALLER (Use screen for safety!)
+   ssh airman@<DHCP-IP>
+   screen -S install              ← Creates persistent session
+   unzip airplayer-install.zip
+   chmod +x install.sh
+   ./install.sh
+   
+   # If SSH drops: ssh back and run: screen -r install
+
+5. DONE
+   After reboot: ssh airman@192.168.5.198
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ FILES NEEDED                                                           │
+└───────────────────────────────────────────────────────────────────────┘
+
+Essential (3 files):
+  install.sh                          ← Installation script
+  install.properties                  ← Your configuration
+  Air Player 5.0 Linux ARM-64.zip    ← Air Player software
+
+Optional:
+  SETUP_GUIDE.md                     ← Complete instructions
+  QUICK_REFERENCE.txt                ← This file
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ DEFAULT CONFIGURATION                                                  │
+└───────────────────────────────────────────────────────────────────────┘
+
+Network:
+  Static IP: 192.168.5.198/22
+  Gateway:   192.168.4.1
+  DNS:       192.168.4.1
+
+Displays (2 by default):
+  HDMI-1:    1920x1080 landscape (primary)
+  HDMI-2:    800x600 portrait-left (secondary)
+  DSI-1:     Disabled (tertiary - optional)
+
+Air Manager:
+  IP: 192.168.5.199
+  Ports: 8080, 5555, 17222
+
+Security:
+  SSH: Public key only, port 22
+  User: airman
+  Firewall: Enabled, restrictive
+  IPv6: Completely disabled
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ CUSTOMIZATION                                                          │
+└───────────────────────────────────────────────────────────────────────┘
+
+Edit install.properties before deployment:
+
+Network:
+  NETWORK_IP=192.168.x.x
+  NETWORK_GATEWAY=192.168.x.x
+  FIREWALL_AIRMANAGER_IP=192.168.x.x
+
+Displays:
+  NUM_DISPLAYS=2  (1, 2, or 3)
+  PRIMARY_RESOLUTION=1920x1080
+  SECONDARY_RESOLUTION=800x600
+  SECONDARY_ROTATION=left  (normal, left, right, inverted)
+
+GPU:
+  GPU_MEMORY=384  (or 512 for 3 displays)
+
+Then reimage and reinstall.
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ ADDING THIRD DISPLAY (DSI)                                             │
+└───────────────────────────────────────────────────────────────────────┘
+
+1. Connect DSI ribbon cable
+2. Boot and check: export DISPLAY=:0 && xrandr (note DSI-1 or DSI-0)
+3. Edit install.properties:
+     NUM_DISPLAYS=3
+     TERTIARY_DISPLAY=DSI-1
+     TERTIARY_DISPLAY_ENABLED=yes
+4. Reimage microSD and reinstall
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ COMMON COMMANDS                                                        │
+└───────────────────────────────────────────────────────────────────────┘
+
+After installation, via SSH:
+
+Check displays:
+  export DISPLAY=:0
+  xrandr
+  xrandr --listmonitors
+
+Check Air Player:
+  ps aux | grep AirPlayer
+
+Check network:
+  ip addr show eth0
+
+Check firewall:
+  sudo ufw status
+
+Check power:
+  vcgencmd get_throttled        # Should be 0x0
+  vcgencmd pmic_read_adc EXT5V_V  # Should be ~5.0V
+
+View logs:
+  journalctl -xe
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                        │
+└───────────────────────────────────────────────────────────────────────┘
+
+Can't SSH after first boot:
+  - Check Ethernet connection
+  - Verify IP address on screen
+  - Test SSH key: ssh -v airman@<IP>
+
+Can't SSH at static IP:
+  - Use static IP from install.properties
+  - Default: ssh airman@192.168.5.198
+
+Displays not working:
+  - Check HDMI cables
+  - SSH in and run: export DISPLAY=:0 && xrandr
+  - Check install.properties settings
+
+Air Player not running:
+  - Check: ls /opt/AirPlayer
+  - Check: ps aux | grep AirPlayer
+  - Check: cat ~/.config/openbox/autostart
+
+Under-voltage warning:
+  - Use proper 5V 5A power supply
+  - NOT MacBook chargers
+  - See SETUP_GUIDE.md Appendix C
+
+Wrong display orientation:
+  - Edit install.properties:
+    SECONDARY_ROTATION=left (or normal, right, inverted)
+  - Reimage and reinstall
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ SSH KEY GENERATION                                                     │
+└───────────────────────────────────────────────────────────────────────┘
+
+On your computer (one-time setup):
+
+Linux/Mac:
+  ssh-keygen -t ed25519 -C "your_email@example.com"
+  cat ~/.ssh/id_ed25519.pub
+
+Windows (PuTTYgen):
+  Generate → EdDSA/Ed25519 → Save keys
+  Copy public key
+
+Paste public key into:
+  Raspberry Pi Imager → Edit Settings → Services → SSH public key
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ POWER SUPPLY                                                           │
+└───────────────────────────────────────────────────────────────────────┘
+
+Raspberry Pi 5 needs stable 5V @ 5A (25W)
+
+Recommended:
+  - Mean Well LRS-150F-5 (5V 30A, industrial grade)
+  - Official Raspberry Pi 27W USB-C PSU
+
+NOT Recommended:
+  - MacBook USB-C chargers (unreliable under load)
+  - Generic USB chargers
+
+Test:
+  vcgencmd pmic_read_adc EXT5V_V  # Should be ~5.0V
+  vcgencmd get_throttled           # Should be 0x0
+
+Under-voltage = crashes, instability, throttling
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ MAKING CHANGES                                                         │
+└───────────────────────────────────────────────────────────────────────┘
+
+Philosophy: Clean builds every time
+
+To change configuration:
+  1. Edit install.properties on your computer
+  2. Reimage microSD (5 minutes)
+  3. Boot Pi, copy files, run installer
+  4. Total: ~15 minutes
+
+Why clean builds?
+  - No cruft or old configs
+  - Reproducible
+  - Easy rollback
+  - Fast recovery
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ SECURITY FEATURES                                                      │
+└───────────────────────────────────────────────────────────────────────┘
+
+✓ SSH: Public key only (no passwords)
+✓ Firewall: UFW, default deny incoming
+✓ IPv6: Completely disabled (kernel, sysctl, firewall)
+✓ Services: Minimal (no Avahi, CUPS, Bluetooth, WiFi)
+✓ Logging: Volatile (RAM only, 32MB max)
+✓ Network: Ethernet only, static IP
+✓ Access: SSH from local network only
+✓ Air Manager: Restricted to specific IP
+
+Hardened for security-conscious environments.
+Built by a cybersecurity professional.
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ INSTALLATION TIME                                                      │
+└───────────────────────────────────────────────────────────────────────┘
+
+Imaging microSD:       ~5 minutes
+First boot:            ~1 minute
+Copy files:            ~30 seconds
+Run installer:         ~10 minutes
+Reboot:                ~1 minute
+────────────────────────────────────
+Total:                 ~17 minutes
+
+After reboot: Fully functional Air Player appliance
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ TIPS                                                                   │
+└───────────────────────────────────────────────────────────────────────┘
+
+✓ Test with 1 display first
+✓ Keep a backup microSD with working config
+✓ Document your display numbers (export DISPLAY=:0 && xrandr --listmonitors)
+✓ Use proper power supply from the start
+✓ Keep install.properties backed up
+✓ No keyboard needed after initial setup
+✓ Everything done via SSH
+✓ Rebuilds are fast - don't hesitate to start over
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ DISPLAY EXAMPLES                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+
+Single display:
+  NUM_DISPLAYS=1
+  PRIMARY_DISPLAY_ENABLED=yes
+  SECONDARY_DISPLAY_ENABLED=no
+
+Two displays (landscape + portrait):
+  NUM_DISPLAYS=2
+  PRIMARY: 1920x1080 normal
+  SECONDARY: 800x600 left (portrait)
+
+Three displays (+ DSI):
+  NUM_DISPLAYS=3
+  PRIMARY: 1920x1080 HDMI-1
+  SECONDARY: 800x600 HDMI-2
+  TERTIARY: 800x800 DSI-1
+
+┌───────────────────────────────────────────────────────────────────────┐
+│ VERIFICATION COMMANDS                                                  │
+└───────────────────────────────────────────────────────────────────────┘
+
+After installation:
+
+ssh airman@192.168.5.198
+
+# Displays
+export DISPLAY=:0
+xrandr --listmonitors          # Should show all displays
+ps aux | grep AirPlayer        # Should show single process
+
+# Network
+ip addr show eth0              # Should show static IP
+ping 192.168.4.1              # Gateway should respond
+
+# Security
+sudo ufw status                # Should be active
+sudo systemctl status ssh      # Should be running
+sudo systemctl status NetworkManager  # Should be masked
+
+# Power
+vcgencmd get_throttled         # Should be 0x0
+vcgencmd pmic_read_adc EXT5V_V # Should be ~5.0V
+
+# System
+uptime                         # Check system is stable
+journalctl -xe                 # Check for errors
+
+╔═══════════════════════════════════════════════════════════════════════╗
+║  For detailed instructions, see SETUP_GUIDE.md                        ║
+║  Hardened build for security-conscious deployments                    ║
+╚═══════════════════════════════════════════════════════════════════════╝
