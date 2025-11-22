@@ -35,9 +35,9 @@
 → install.sh (17KB) ⭐ THE INSTALLATION SCRIPT
   Run this on your Raspberry Pi
   
-→ install.properties (NOT INCLUDED - you create/edit this)
-  Your configuration file
-  Edit before installation
+→ install.properties (1.6KB) ⭐ CONFIGURATION FILE
+  Edit this for your network and display setup
+  Example configuration included
 
 → Air Player 5.0 Linux ARM-64.zip (NOT INCLUDED - you provide)
   From Sim Innovations
@@ -121,18 +121,24 @@ SETUP_GUIDE.md (28KB) ⭐
   When:     During installation
   Contains: Step-by-step, troubleshooting, detailed appendices
 
-install.sh (17KB)
+install.sh (17KB) ⭐
   What:     The installation script
   For:      Raspberry Pi
   When:     During installation
   Contains: All automation, well-commented code
 
+install.properties (1.6KB) ⭐
+  What:     Configuration file
+  For:      Customize before installation
+  When:     Before copying files to Pi
+  Contains: Network, display, and security settings
+
 ┌───────────────────────────────────────────────────────────────────────┐
 │ DOCUMENTATION STATISTICS                                               │
 └───────────────────────────────────────────────────────────────────────┘
 
-Total Files:           4 documentation files + install.sh
-Total Size:            ~90KB
+Total Files:           7 files (4 docs + install.sh + install.properties + LICENSE)
+Total Size:            ~75KB
 Reading Time:          ~45 minutes (all documents)
 Installation Time:     17 minutes (following guide)
 
