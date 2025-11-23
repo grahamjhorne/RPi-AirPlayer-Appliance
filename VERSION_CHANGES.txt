@@ -1,0 +1,310 @@
+# Air Player Appliance Builder - Version 1.1 Release Notes
+
+## Version 1.1 - Idempotent Configuration Management
+
+**Release Date:** November 23, 2024
+
+## Overview
+
+Version 1.1 adds **idempotent configuration management** - the ability to update configurations without reimaging the SD card. This major enhancement provides significant time savings and preserves your AirPlayer license across updates.
+
+## Key New Features
+
+### 1. Idempotent Script Operation
+- Script now checks current state before making changes
+- Safe to run multiple times
+- Only applies changes when necessary
+- Skips already-configured items
+
+### 2. Command Line Options
+- `--dry-run`: Preview what would change without making modifications
+- `--force`: Force all changes even if already configured
+- No arguments: Normal operation (apply changes as needed)
+
+### 3. State Tracking
+- Location: `/var/lib/airplayer-appliance/state`
+- Tracks what's been configured and when
+- Tracks current configuration values
+- Enables intelligent change detection
+
+### 4. Automatic Backups
+- Location: `/var/backups/airplayer-appliance/`
+- All modified files backed up with timestamp
+- Easy rollback if needed
+- Example: `config.txt.20241122_143052`
+
+### 5. Configuration Updates Without Reimaging
+- Edit install.properties on running system
+- Run install.sh to apply changes
+- Complete in <1 minute (vs 17 minutes)
+- Reboot only if needed
+
+### 6. AirPlayer Upgrade Support
+- Replace AirPlayer zip file
+- Run install.sh to extract new version
+- Preserves configuration and license
+- No full reimage needed
+
+### 7. License Preservation
+- Hardware UUID stays the same
+- AirPlayer license remains valid
+- No need to reactivate after config updates
+- Only fresh installs need new license
+
+## What Didn't Change
+
+- Fresh installation workflow remains the same
+- All security hardening preserved
+- Same configuration file format
+- Same network and display setup
+- Same ~17 minute installation time for fresh builds
+
+## Breaking Changes
+
+**None.** Version 1.1 is fully backward compatible with version 1.0.
+
+Existing systems:
+- Copy the new install.sh to your Pi
+- Start using the update workflow
+- Or continue using fresh installs as before
+
+## Time Savings
+
+### Before (v1.0):
+- Any configuration change: ~17 minutes (full reimage)
+- Display rotation change: ~17 minutes
+- GPU memory increase: ~17 minutes
+- Network setting change: ~17 minutes
+- AirPlayer upgrade: ~17 minutes
+
+### After (v1.1):
+- Configuration changes: <1 minute + reboot
+- Display rotation change: <1 minute + reboot
+- GPU memory increase: <1 minute + reboot
+- Network setting change: <1 minute + reboot
+- AirPlayer upgrade: <1 minute + restart X
+
+**Time savings: Up to 95% reduction for configuration changes**
+
+## New Documentation
+
+### IDEMPOTENT_GUIDE.md (NEW)
+Complete guide to v1.1 features:
+- What changed and why
+- How to use --dry-run and --force
+- Configuration update examples
+- AirPlayer upgrade procedure
+- State tracking explained
+- Backup system details
+- Migration from v1.0
+
+### Updated Documentation
+All existing documentation updated to cover both workflows:
+- README.txt: Added v1.1 overview and quick start for updates
+- SETUP_GUIDE.md: Added "Configuration Update Workflow" section
+- QUICK_REFERENCE.txt: Added update commands and examples
+- CONTRIBUTING.md: Added idempotency testing requirements
+- FILE_INDEX.txt: Added navigation for v1.1 features
+
+## Use Cases
+
+### When to Use Fresh Installation (Workflow 1)
+- First time setup
+- Want guaranteed clean state
+- Major troubleshooting
+- New Raspberry Pi
+- SD card corruption
+- Complete system reconfiguration
+
+### When to Use Configuration Update (Workflow 2 - NEW)
+- Change display layout
+- Adjust GPU memory
+- Update network settings
+- Upgrade AirPlayer
+- Add or remove displays
+- Modify firewall rules
+- Any install.properties change
+- Preserve AirPlayer license
+
+## Technical Details
+
+### State File Format
+```
+network_ip=192.168.5.198
+network_configured=20241122
+ssh_configured=20241122
+packages_installed=20241122
+gpu_memory=384
+num_displays=2
+display_config=20241122
+last_run=20241122_143052
+```
+
+### Backup File Naming
+```
+filename.YYYYMMDD_HHMMSS
+
+Examples:
+config.txt.20241122_143052
+sshd_config.20241122_143053
+fstab.20241122_143055
+```
+
+### Idempotent Logic
+Each configuration section:
+1. Checks current state
+2. Compares with desired state from install.properties
+3. Skips if already correct
+4. Backs up before modifying (if needed)
+5. Applies changes (if needed)
+6. Updates state file
+7. Reports what happened
+
+## Migration Guide
+
+### From v1.0 to v1.1
+
+**Existing v1.0 Systems:**
+1. Copy new install.sh to your Pi (replaces old version)
+2. Keep your existing install.properties
+3. Run: `./install.sh --dry-run` to see current state
+4. Now you can use update workflow
+
+**No Migration Required:**
+- Existing systems work as-is
+- No state file initially - will be created on first v1.1 run
+- Script detects current configuration automatically
+- First run may take slightly longer to establish state
+
+**Recommended:**
+```bash
+# After copying new install.sh
+chmod +x install.sh
+./install.sh --dry-run    # See current state
+./install.sh              # Establish state file
+```
+
+## Examples
+
+### Example 1: Change Display Rotation
+```bash
+# v1.0 way (still works):
+# 1. Edit install.properties on computer
+# 2. Reimage SD card (~5 minutes)
+# 3. Run full installation (~10 minutes)
+# Total: ~17 minutes
+
+# v1.1 way (NEW):
+ssh airman@192.168.5.198
+nano install.properties   # Change SECONDARY_ROTATION=left
+./install.sh --dry-run    # Preview
+./install.sh              # Apply (<30 seconds)
+sudo reboot              # Apply display change
+# Total: <2 minutes
+```
+
+### Example 2: Upgrade AirPlayer
+```bash
+# v1.0 way:
+# Full reimage required (~17 minutes)
+
+# v1.1 way (NEW):
+ssh airman@192.168.5.198
+cp ~/AirPlayer-5.1.zip ~/AirPlayer.zip
+./install.sh             # Extracts new version
+sudo systemctl restart lightdm
+# Total: <1 minute
+```
+
+### Example 3: Increase GPU Memory
+```bash
+# v1.0 way:
+# Full reimage required (~17 minutes)
+
+# v1.1 way (NEW):
+ssh airman@192.168.5.198
+nano install.properties  # GPU_MEMORY=512
+./install.sh --dry-run   # See what changes
+./install.sh             # Apply
+sudo reboot             # For boot config
+# Total: <2 minutes
+```
+
+## Rollback Procedures
+
+### Rollback a Single File
+```bash
+# List backups
+ls -la /var/backups/airplayer-appliance/
+
+# Restore specific file
+sudo cp /var/backups/airplayer-appliance/config.txt.20241122_143052 \
+        /boot/firmware/config.txt
+sudo reboot
+```
+
+### Rollback All Configuration
+```bash
+# Force rebuild from install.properties
+./install.sh --force
+sudo reboot
+```
+
+### Complete Rollback
+```bash
+# If v1.1 causes issues, revert to v1.0:
+# 1. Keep old v1.0 install.sh backed up
+# 2. Copy it back
+# 3. Do fresh install (v1.0 style)
+```
+
+## Known Issues
+
+None currently identified.
+
+## Future Enhancements
+
+Potential future additions:
+- Configuration profiles (save/load different configs)
+- Remote configuration management
+- Web-based configuration interface
+- Automated backup rotation
+- Configuration validation pre-check
+- Multi-system configuration sync
+
+## Credits
+
+Version 1.1 developed in response to user feedback requesting:
+- Faster configuration updates
+- AirPlayer upgrade capability without reimaging
+- License preservation across updates
+- Preview mode before applying changes
+
+## Support
+
+For issues or questions about v1.1:
+1. Review IDEMPOTENT_GUIDE.md
+2. Check SETUP_GUIDE.md troubleshooting section
+3. Review state file: `cat /var/lib/airplayer-appliance/state`
+4. Check backups: `ls -la /var/backups/airplayer-appliance/`
+5. Try: `./install.sh --force`
+6. Open an issue with detailed information
+
+## Upgrade Recommendation
+
+**Highly Recommended** for all users.
+
+Benefits:
+- Significant time savings
+- License preservation
+- Easy configuration updates
+- No downside - backward compatible
+- Fresh install workflow unchanged
+
+Installation:
+- New systems: Get v1.1 package
+- Existing systems: Replace install.sh with v1.1 version
+
+---
+
+**Version 1.1 makes configuration management fast and simple while preserving all the security and reliability of version 1.0.**

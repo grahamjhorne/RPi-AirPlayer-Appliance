@@ -1,23 +1,50 @@
 ╔═══════════════════════════════════════════════════════════════════════╗
-║   AIR PLAYER APPLIANCE BUILDER FOR RASPBERRY PI 5                    ║
+║   AIR PLAYER APPLIANCE SETUP & CONFIGURATION FOR RASPBERRY PI 5                    ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 
 WHAT IS THIS?
 ═════════════
 
-A single-script system that builds a hardened, minimal Air Player appliance
-on Raspberry Pi 5 for flight simulator instrument displays.
+A configuration management system that builds and maintains hardened Air Player
+appliances on Raspberry Pi 5 for flight simulator instrument displays.
+
+**NEW in Version 1.1:** Idempotent configuration management
+- Safe to run multiple times
+- Update configuration without reimaging
+- Upgrade AirPlayer without starting over
+- Dry-run mode to preview changes
+- Automatic state tracking and backups
 
 PHILOSOPHY
 ══════════
 
 - Minimal OS (RPi OS Lite, no desktop)
 - Hardened security (SSH keys only, firewall, minimal services)
-- Single installation script
+- Single setup script
 - SSH-only operation (no keyboard needed)
-- Clean builds every time (~15 minutes)
+- **NEW: Maintain configuration over time without reimaging**
 - Repeatable and reliable
 - Optimized for SD card longevity
+
+
+
+TWO WORKFLOWS
+═════════════
+
+**Workflow 1: Initial Setup (Fresh Install)**
+  - Image microSD card
+  - Boot and note IP
+  - Copy files via SCP
+  - Run ./setup.sh
+  - Reboot
+  Time: ~17 minutes
+
+**Workflow 2: Configuration Updates (Version 1.1 NEW!)**
+  - Edit install.properties on running system
+  - Run ./setup.sh --dry-run (preview changes)
+  - Run ./setup.sh (apply changes)
+  - Reboot if needed (only for network/display changes)
+  Time: ~1-3 minutes for most changes
 
 SECURITY FEATURES
 ═════════════════
@@ -67,7 +94,7 @@ FILES
 ═════
 
 Essential (3 files):
-  ✓ install.sh              - Installation script
+  ✓ setup.sh              - Setup and configuration script
   ✓ install.properties      - Your configuration
   ✓ Air Player 5.0 Linux ARM-64.zip (you provide)
 
@@ -91,19 +118,19 @@ QUICK START
    - Note IP address from screen (or check router)
 
 3. COPY FILES
-   zip airplayer-install.zip install.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
-   scp airplayer-install.zip airman@<DHCP-IP>:.
+   zip airplayer-setup.zip setup.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+   scp airplayer-setup.zip airman@<DHCP-IP>:.
 
 4. RUN INSTALLER (Use screen or tmux for safety)
    ssh airman@<DHCP-IP>
-   screen -S install          # Creates persistent session
-   unzip airplayer-install.zip
-   chmod +x install.sh
-   ./install.sh
+   screen -S setup          # Creates persistent session
+   unzip airplayer-setup.zip
+   chmod +x setup.sh
+   ./setup.sh
 
    # If SSH disconnects, reconnect with:
    # ssh airman@<DHCP-IP>
-   # screen -r install
+   # screen -r setup
 
 5. REBOOT WHEN PROMPTED
    Press Enter when installation completes
@@ -116,24 +143,24 @@ INSTALLATION METHODS
 
 METHOD 1: Screen Session (RECOMMENDED for remote)
    ssh airman@<IP>
-   screen -S install
-   unzip airplayer-install.zip && chmod +x install.sh && ./install.sh
-   # If disconnected: ssh back in and run: screen -r install
+   screen -S setup
+   unzip airplayer-setup.zip && chmod +x setup.sh && ./setup.sh
+   # If disconnected: ssh back in and run: screen -r setup
 
 METHOD 2: Tmux Session (Alternative)
    ssh airman@<IP>
-   tmux new -s install
-   unzip airplayer-install.zip && chmod +x install.sh && ./install.sh
-   # If disconnected: ssh back in and run: tmux attach -t install
+   tmux new -s setup
+   unzip airplayer-setup.zip && chmod +x setup.sh && ./setup.sh
+   # If disconnected: ssh back in and run: tmux attach -t setup
 
 METHOD 3: Direct Console (Most reliable)
    # Use keyboard and monitor directly
    # Login at console
-   unzip airplayer-install.zip && chmod +x install.sh && ./install.sh
+   unzip airplayer-setup.zip && chmod +x setup.sh && ./setup.sh
 
 METHOD 4: Nohup with Logging (For automation)
-   ssh airman@<IP> 'cd ~ && unzip airplayer-install.zip && chmod +x install.sh && nohup ./install.sh > install.log 2>&1 &'
-   # Monitor: ssh airman@<IP> 'tail -f install.log'
+   ssh airman@<IP> 'cd ~ && unzip airplayer-setup.zip && chmod +x setup.sh && nohup ./setup.sh > setup.log 2>&1 &'
+   # Monitor: ssh airman@<IP> 'tail -f setup.log'
 
 WHY USE SCREEN/TMUX?
    - Installation completes even if SSH disconnects
@@ -188,7 +215,7 @@ To change any configuration:
 
 1. Edit install.properties on your computer
 2. Reimage microSD card (5 minutes)
-3. Boot Pi and run installer (10 minutes)
+3. Boot Pi and run setup script (10 minutes)
 4. Done!
 
 Clean build every time = no issues, no cruft, no surprises.
@@ -215,7 +242,7 @@ After reboot: Fully functional, hardened Air Player appliance
 HOW IT WORKS
 ════════════
 
-The installer does 10 main steps:
+The setup script does 10 main steps:
 
 1. Configure static network (applies on reboot)
 2. Harden SSH (key-only authentication)
@@ -299,8 +326,8 @@ Air Player not running:
   ✓ Should NOT see /opt/AirPlayer/Bootloader
 
 Installation stopped mid-way:
-  ✓ Did you use screen or tmux? Reconnect with: screen -r install
-  ✓ Check install.log if using nohup: tail -f install.log
+  ✓ Did you use screen or tmux? Reconnect with: screen -r setup
+  ✓ Check setup.log if using nohup: tail -f setup.log
   ✓ If necessary, reimage SD card and start fresh
 
 Under-voltage warning:

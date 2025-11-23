@@ -1,5 +1,5 @@
 ╔═══════════════════════════════════════════════════════════════════════╗
-║     AIR PLAYER APPLIANCE BUILDER - QUICK REFERENCE                   ║
+║     AIR PLAYER APPLIANCE SETUP & CONFIGURATION - QUICK REFERENCE                   ║
 ║     Raspberry Pi 5 Hardened Flight Simulator Display                 ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 
@@ -23,17 +23,17 @@
    - Note IP address from screen
 
 3. COPY FILES
-   zip airplayer-install.zip install.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
-   scp airplayer-install.zip airman@<DHCP-IP>:.
+   zip airplayer-setup.zip setup.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+   scp airplayer-setup.zip airman@<DHCP-IP>:.
 
 4. RUN INSTALLER (Use screen for safety!)
    ssh airman@<DHCP-IP>
-   screen -S install              ← Creates persistent session
-   unzip airplayer-install.zip
-   chmod +x install.sh
-   ./install.sh
+   screen -S setup              ← Creates persistent session
+   unzip airplayer-setup.zip
+   chmod +x setup.sh
+   ./setup.sh
    
-   # If SSH drops: ssh back and run: screen -r install
+   # If SSH drops: ssh back and run: screen -r setup
 
 5. DONE
    After reboot: ssh airman@192.168.5.198
@@ -43,7 +43,7 @@
 └───────────────────────────────────────────────────────────────────────┘
 
 Essential (3 files):
-  install.sh                          ← Installation script
+  setup.sh                          ← Setup and configuration script
   install.properties                  ← Your configuration
   Air Player 5.0 Linux ARM-64.zip    ← Air Player software
 
@@ -215,7 +215,7 @@ Philosophy: Clean builds every time
 To change configuration:
   1. Edit install.properties on your computer
   2. Reimage microSD (5 minutes)
-  3. Boot Pi, copy files, run installer
+  3. Boot Pi, copy files, run setup script
   4. Total: ~15 minutes
 
 Why clean builds?
@@ -247,7 +247,7 @@ Built by a cybersecurity professional.
 Imaging microSD:       ~5 minutes
 First boot:            ~1 minute
 Copy files:            ~30 seconds
-Run installer:         ~10 minutes
+Run setup:         ~10 minutes
 Reboot:                ~1 minute
 ────────────────────────────────────
 Total:                 ~17 minutes

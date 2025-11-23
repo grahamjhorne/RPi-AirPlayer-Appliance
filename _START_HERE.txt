@@ -1,0 +1,336 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║   AIR PLAYER APPLIANCE BUILDER - VERSION 1.1                         ║
+║   START HERE - Quick Orientation Guide                               ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+WELCOME TO VERSION 1.1!
+═══════════════════════
+
+Version 1.1 adds IDEMPOTENT CONFIGURATION MANAGEMENT - you can now update 
+settings without reimaging the SD card!
+
+⏱️  Configuration updates: <1 minute (vs 17 minutes in v1.0)
+🔑 Preserves AirPlayer license across updates
+💾 Automatic state tracking and backups
+👁️  Preview changes with --dry-run before applying
+
+PACKAGE CONTENTS (10 files)
+════════════════════════════
+
+ESSENTIAL (3 files):
+  ✓ install.sh              - The script (for fresh install OR updates)
+  ✓ install.properties      - Your configuration file
+  ✓ [Air Player zip]        - Not included, you must provide
+
+DOCUMENTATION (7 files):
+  ✓ README.txt              - Overview and both workflows
+  ✓ SETUP_GUIDE.md          - Complete step-by-step instructions
+  ✓ QUICK_REFERENCE.txt     - Commands and examples
+  ✓ IDEMPOTENT_GUIDE.md     - ⭐ NEW! v1.1 features explained
+  ✓ FILE_INDEX.txt          - Documentation navigator
+  ✓ VERSION_CHANGES.txt     - What changed in v1.1
+  ✓ CONTRIBUTING.md         - Contributing guidelines
+  ✓ PACKAGE_SUMMARY.txt     - This package summary
+  ✓ _START_HERE.txt         - This file!
+
+TWO WORKFLOWS - CHOOSE THE RIGHT ONE
+═════════════════════════════════════
+
+WORKFLOW 1: Fresh Installation (~17 minutes)
+────────────────────────────────────────────
+When: First time, new Raspberry Pi, want clean slate
+
+Quick steps:
+1. Image SD card with Raspberry Pi Imager
+2. Boot Pi, note IP
+3. Copy files via SCP
+4. Run install.sh with screen/tmux
+5. Reboot
+
+Details: See SETUP_GUIDE.md → Fresh Installation Workflow
+
+WORKFLOW 2: Configuration Update (<1 minute) ⭐ NEW v1.1!
+─────────────────────────────────────────────────────────
+When: Update settings on running system
+
+Quick steps:
+1. SSH into Pi
+2. Edit install.properties
+3. Run: ./install.sh --dry-run (preview)
+4. Run: ./install.sh (apply)
+5. Reboot if prompted
+
+Details: See SETUP_GUIDE.md → Configuration Update Workflow
+
+QUICK START PATHS
+═════════════════
+
+PATH 1: Brand New Installation
+───────────────────────────────
+1. Read README.txt (10 min overview)
+2. Follow SETUP_GUIDE.md → Fresh Installation (step-by-step)
+3. Keep QUICK_REFERENCE.txt handy during install
+Result: Working Air Player in ~17 minutes
+
+PATH 2: Update Existing System
+───────────────────────────────
+1. Read QUICK_REFERENCE.txt → Configuration Update section
+2. Edit install.properties
+3. Run ./install.sh --dry-run, then ./install.sh
+Result: Updated config in <1 minute
+
+PATH 3: Understand v1.1 Features
+─────────────────────────────────
+1. Read VERSION_CHANGES.txt (what's new)
+2. Read IDEMPOTENT_GUIDE.md (deep dive)
+3. Try --dry-run on your system
+Result: Full understanding of new capabilities
+
+PATH 4: Migrating from v1.0
+────────────────────────────
+1. Read VERSION_CHANGES.txt
+2. Copy new install.sh to your Pi
+3. Run ./install.sh --dry-run
+Result: Ready to use update workflow
+
+WHAT'S NEW IN v1.1
+══════════════════
+
+✨ Idempotent script - safe to run multiple times
+✨ --dry-run flag - preview changes before applying
+✨ --force flag - rebuild everything when needed
+✨ State tracking - /var/lib/airplayer-appliance/state
+✨ Automatic backups - /var/backups/airplayer-appliance/
+✨ Configuration updates without reimaging
+✨ AirPlayer upgrades without reimaging
+✨ Preserves hardware UUID = license stays valid
+
+BEFORE (v1.0):
+  Change config → Reimage SD → Reinstall (~17 min) → New license
+
+NOW (v1.1):
+  Change config → Run install.sh (<1 min) → Done! License preserved
+
+COMMON OPERATIONS
+═════════════════
+
+Fresh Install:
+  Follow SETUP_GUIDE.md → Fresh Installation Workflow
+  Time: ~17 minutes
+
+Change Display Rotation:
+  nano install.properties (edit SECONDARY_ROTATION=left)
+  ./install.sh --dry-run
+  ./install.sh
+  sudo reboot
+  Time: <2 minutes
+
+Upgrade AirPlayer:
+  cp ~/AirPlayer-5.1.zip ~/AirPlayer.zip
+  ./install.sh
+  sudo systemctl restart lightdm
+  Time: <1 minute
+
+Increase GPU Memory:
+  nano install.properties (edit GPU_MEMORY=512)
+  ./install.sh
+  sudo reboot
+  Time: <2 minutes
+
+Add Third Display:
+  nano install.properties (NUM_DISPLAYS=3, configure tertiary)
+  ./install.sh
+  sudo reboot
+  Time: <2 minutes
+
+COMMAND REFERENCE
+═════════════════
+
+./install.sh              Normal: Apply changes as needed
+./install.sh --dry-run    Preview: Show what would change
+./install.sh --force      Rebuild: Force all changes
+
+Check state:
+  cat /var/lib/airplayer-appliance/state
+
+Check backups:
+  ls -la /var/backups/airplayer-appliance/
+
+DOCUMENTATION READING ORDER
+════════════════════════════
+
+Must Read First:
+1. README.txt (15-20 minutes)
+   - Overview of both workflows
+   - Philosophy and features
+   - Quick start for both workflows
+
+2. SETUP_GUIDE.md (during installation/update)
+   - Fresh Installation Workflow
+   - Configuration Update Workflow
+   - Complete appendices
+
+Keep Handy:
+3. QUICK_REFERENCE.txt
+   - One-page command reference
+   - Both workflows
+   - Troubleshooting quick checks
+
+Understand v1.1:
+4. IDEMPOTENT_GUIDE.md
+   - How idempotency works
+   - State tracking explained
+   - Examples and use cases
+
+Reference:
+5. FILE_INDEX.txt (navigation guide)
+6. VERSION_CHANGES.txt (detailed changes)
+7. CONTRIBUTING.md (if contributing)
+8. PACKAGE_SUMMARY.txt (this package)
+
+WHERE TO GO FROM HERE
+═════════════════════
+
+If you're doing a FRESH INSTALLATION:
+→ Go to: README.txt
+→ Then: SETUP_GUIDE.md → Fresh Installation Workflow
+→ Time: ~17 minutes
+
+If you're UPDATING AN EXISTING SYSTEM:
+→ Go to: QUICK_REFERENCE.txt → Configuration Update
+→ Or: SETUP_GUIDE.md → Configuration Update Workflow
+→ Time: <1 minute
+
+If you're LEARNING ABOUT v1.1:
+→ Go to: VERSION_CHANGES.txt
+→ Then: IDEMPOTENT_GUIDE.md
+→ Time: ~20 minutes reading
+
+If you're MIGRATING FROM v1.0:
+→ Go to: VERSION_CHANGES.txt
+→ Replace install.sh on your Pi
+→ Run: ./install.sh --dry-run
+→ Time: <5 minutes
+
+TROUBLESHOOTING
+═══════════════
+
+Something not working?
+
+1. QUICK_REFERENCE.txt → Troubleshooting section (quick fixes)
+2. SETUP_GUIDE.md → Troubleshooting section (detailed solutions)
+3. Try: ./install.sh --force (rebuild config in <1 min)
+4. Fresh install if needed (~17 minutes, guaranteed clean)
+
+WHAT YOU NEED
+═════════════
+
+Hardware:
+  ✓ Raspberry Pi 5 (4GB or 8GB)
+  ✓ 16-32GB microSD card
+  ✓ 5V 5A power supply (official RPi or Mean Well)
+  ✓ Ethernet cable
+  ✓ 1-3 displays (HDMI or DSI)
+
+Software:
+  ✓ Raspberry Pi Imager
+  ✓ SSH key pair (see SETUP_GUIDE.md Appendix A)
+  ✓ Air Player Linux ARM-64 zip (from Sim Innovations)
+
+Time:
+  ✓ Fresh installation: ~17 minutes
+  ✓ Configuration update: <1 minute
+
+SUPPORT
+═══════
+
+All documentation included:
+  - README.txt for overview
+  - SETUP_GUIDE.md for step-by-step
+  - QUICK_REFERENCE.txt for commands
+  - IDEMPOTENT_GUIDE.md for v1.1 features
+  - Troubleshooting in multiple docs
+
+Still stuck?
+  - Try ./install.sh --force
+  - Check state: cat /var/lib/airplayer-appliance/state
+  - Fresh rebuild: ~17 minutes for guaranteed clean state
+
+VERSION COMPATIBILITY
+══════════════════════
+
+✓ v1.1 is fully backward compatible with v1.0
+✓ Fresh install workflow unchanged
+✓ Existing install.properties files work as-is
+✓ Can copy v1.1 install.sh to v1.0 system
+✓ No breaking changes
+
+KEY FILES EXPLAINED
+═══════════════════
+
+install.sh:
+  - Main script for installation AND updates
+  - NEW in v1.1: Idempotent (checks before acting)
+  - NEW in v1.1: --dry-run and --force options
+  - Use for fresh installs OR configuration updates
+
+install.properties:
+  - Your configuration file
+  - Network, display, security settings
+  - Edit before first install OR on running system
+  - Same format in v1.0 and v1.1
+
+README.txt:
+  - Start here for overview
+  - Explains both workflows
+  - Security features
+  - Quick start guides
+
+SETUP_GUIDE.md:
+  - Main installation/update guide
+  - Step-by-step for both workflows
+  - Complete appendices
+  - Troubleshooting
+
+QUICK_REFERENCE.txt:
+  - Keep this handy!
+  - Commands for both workflows
+  - Quick troubleshooting
+  - Examples
+
+IDEMPOTENT_GUIDE.md:
+  - NEW in v1.1
+  - Explains idempotent features
+  - State tracking and backups
+  - Migration from v1.0
+
+NEXT STEPS
+══════════
+
+✅ You've read this orientation guide
+
+Choose your path:
+
+□ FRESH INSTALLATION:
+  Next → README.txt → SETUP_GUIDE.md → Install!
+
+□ CONFIGURATION UPDATE:
+  Next → QUICK_REFERENCE.txt → Edit & Update!
+
+□ UNDERSTAND v1.1:
+  Next → VERSION_CHANGES.txt → IDEMPOTENT_GUIDE.md
+
+□ MIGRATE FROM v1.0:
+  Next → VERSION_CHANGES.txt → Copy new install.sh
+
+═══════════════════════════════════════════════════════════════════════
+
+Version 1.1 - November 2024
+Configuration management made simple.
+
+Start reading: README.txt
+Main guide: SETUP_GUIDE.md
+Quick reference: QUICK_REFERENCE.txt
+v1.1 features: IDEMPOTENT_GUIDE.md
+
+═══════════════════════════════════════════════════════════════════════
