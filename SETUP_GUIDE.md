@@ -38,7 +38,7 @@ Use this for first-time setup or when you want a guaranteed clean state.
 1. Image microSD card with Raspberry Pi OS Lite (64-bit)
 2. Boot Raspberry Pi, note IP address
 3. Copy installation files via SCP
-4. Run install.sh via SSH
+4. Run setup.sh via SSH
 5. Reboot - Done!
 
 ## Detailed Steps
@@ -103,12 +103,12 @@ On your computer, in a directory:
 
 ```
 airplayer-install/
-├── install.sh
-├── install.properties
+├── setup.sh
+├── setup.properties
 └── Air Player 5.0 Linux ARM-64.zip
 ```
 
-**Edit install.properties** if your network is different:
+**Edit setup.properties** if your network is different:
 - NETWORK_IP (what you want the static IP to be)
 - NETWORK_GATEWAY
 - FIREWALL_AIRMANAGER_IP
@@ -120,10 +120,10 @@ From your computer (replace 192.168.x.x with Pi's current DHCP IP):
 
 ```bash
 # Create a zip with all files
-zip airplayer-install.zip install.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+zip airplayer-setup.zip setup.sh setup.properties "Air Player 5.0 Linux ARM-64.zip"
 
 # Copy to Pi
-scp airplayer-install.zip airman@192.168.x.x:.
+scp airplayer-setup.zip airman@192.168.x.x:.
 
 # That's it!
 ```
@@ -140,13 +140,13 @@ ssh airman@192.168.x.x
 screen -S install
 
 # Extract files
-unzip airplayer-install.zip
+unzip airplayer-setup.zip
 
 # Make script executable
-chmod +x install.sh
+chmod +x setup.sh
 
 # Run installation
-./install.sh
+./setup.sh
 ```
 
 If SSH disconnects during installation:
@@ -160,9 +160,9 @@ screen -r install    # Reconnect to see progress
 If you have keyboard and monitor connected:
 ```bash
 # Login at console as airman
-unzip airplayer-install.zip
-chmod +x install.sh
-./install.sh
+unzip airplayer-setup.zip
+chmod +x setup.sh
+./setup.sh
 ```
 
 The script will:
@@ -205,7 +205,7 @@ Use this to change configurations on a running system.
 - Update network settings
 - Upgrade AirPlayer version
 - Modify firewall rules
-- Any configuration change in install.properties
+- Any configuration change in setup.properties
 
 ## Benefits
 
@@ -222,7 +222,7 @@ SSH into your Pi and edit the properties file:
 
 ```bash
 ssh airman@192.168.5.198
-nano install.properties
+nano setup.properties
 ```
 
 Make your changes, save and exit (Ctrl+O, Enter, Ctrl+X).
@@ -232,7 +232,7 @@ Make your changes, save and exit (Ctrl+O, Enter, Ctrl+X).
 See what would change without applying:
 
 ```bash
-./install.sh --dry-run
+./setup.sh --dry-run
 ```
 
 The output shows:
@@ -256,7 +256,7 @@ Example output:
 Run the script to apply changes:
 
 ```bash
-./install.sh
+./setup.sh
 ```
 
 The script will:
@@ -290,14 +290,14 @@ sudo reboot
 
 ```bash
 # Edit configuration
-nano install.properties
+nano setup.properties
 # Change: SECONDARY_ROTATION=left
 
 # Preview
-./install.sh --dry-run
+./setup.sh --dry-run
 
 # Apply
-./install.sh
+./setup.sh
 
 # Reboot for display changes
 sudo reboot
@@ -310,7 +310,7 @@ sudo reboot
 cp ~/Downloads/AirPlayer-5.1.zip ~/AirPlayer.zip
 
 # Update (extracts new version)
-./install.sh
+./setup.sh
 
 # Restart X to reload
 sudo systemctl restart lightdm
@@ -320,14 +320,14 @@ sudo systemctl restart lightdm
 
 ```bash
 # Edit configuration
-nano install.properties
+nano setup.properties
 # Change: GPU_MEMORY=512
 
 # Preview
-./install.sh --dry-run
+./setup.sh --dry-run
 
 # Apply
-./install.sh
+./setup.sh
 
 # Reboot for boot config
 sudo reboot
@@ -337,16 +337,16 @@ sudo reboot
 
 ```bash
 # Edit configuration
-nano install.properties
+nano setup.properties
 # Change: NUM_DISPLAYS=3
 # Configure TERTIARY_DISPLAY settings
 # Set GPU_MEMORY=512
 
 # Preview
-./install.sh --dry-run
+./setup.sh --dry-run
 
 # Apply
-./install.sh
+./setup.sh
 
 # Reboot
 sudo reboot
@@ -356,7 +356,7 @@ sudo reboot
 
 ```bash
 # See current state without changes
-./install.sh --dry-run
+./setup.sh --dry-run
 ```
 
 ### Example 6: Force Rebuild
@@ -364,7 +364,7 @@ sudo reboot
 If something seems wrong, force a complete reconfiguration:
 
 ```bash
-./install.sh --force
+./setup.sh --force
 ```
 
 ---
@@ -399,7 +399,7 @@ sudo swapon --show
 
 # Check GPU memory
 vcgencmd get_mem gpu
-# Should match install.properties
+# Should match setup.properties
 
 # Check power is good
 vcgencmd get_throttled
@@ -428,9 +428,9 @@ ls -la /var/backups/airplayer-appliance/
 
 ## Displays not working
 - Verify connections (HDMI cables)
-- Check `install.properties` display settings
+- Check `setup.properties` display settings
 - After reboot: `ssh airman@192.168.5.198` and run `export DISPLAY=:0 && xrandr`
-- Try: `./install.sh --force`
+- Try: `./setup.sh --force`
 
 ## Air Player not starting
 - Check if installed: `ls /opt/AirPlayer`
@@ -439,16 +439,16 @@ ls -la /var/backups/airplayer-appliance/
 - Restart X: `sudo systemctl restart lightdm`
 
 ## Configuration not applying
-- Did you run `./install.sh` after editing?
+- Did you run `./setup.sh` after editing?
 - Did you reboot if prompted?
-- Try: `./install.sh --force`
+- Try: `./setup.sh --force`
 - Check state: `cat /var/lib/airplayer-appliance/state`
 
 ## Script says "already configured"
 - This is NORMAL - it means that setting is already correct
 - Use `--dry-run` to see current state
 - Use `--force` to rebuild everything anyway
-- Edit install.properties if you want different settings
+- Edit setup.properties if you want different settings
 
 ## AirPlayer license invalid after update
 - Update workflow (v1.1) preserves hardware UUID
@@ -473,8 +473,8 @@ ls -la /var/backups/airplayer-appliance/
 # Restore a specific file
 sudo cp /var/backups/airplayer-appliance/config.txt.20241122_143052 /boot/firmware/config.txt
 
-# Or force rebuild from install.properties
-./install.sh --force
+# Or force rebuild from setup.properties
+./setup.sh --force
 
 # Or do fresh install for guaranteed clean state
 ```
@@ -604,8 +604,8 @@ vcgencmd get_throttled
 
 Before starting, ensure you have:
 
-- [ ] install.sh (the installation script)
-- [ ] install.properties (your configuration)
+- [ ] setup.sh (the setup script)
+- [ ] setup.properties (your configuration)
 - [ ] Air Player 5.0 Linux ARM-64.zip
 - [ ] SSH keys generated (Appendix A)
 - [ ] Raspberry Pi Imager installed
@@ -656,18 +656,18 @@ sudo cp /var/backups/airplayer-appliance/file.timestamp /path/to/original/file
 - Preview what would change without making modifications
 - Shows ✓ (already configured) and → (would update)
 - Safe to run anytime
-- Example: `./install.sh --dry-run`
+- Example: `./setup.sh --dry-run`
 
 **--force**
 - Force all changes even if already configured
 - Useful for troubleshooting or ensuring clean state
-- Reconfigures everything from install.properties
-- Example: `./install.sh --force`
+- Reconfigures everything from setup.properties
+- Example: `./setup.sh --force`
 
 **No arguments**
 - Normal operation: Apply changes as needed
 - Checks state, only updates what changed
-- Example: `./install.sh`
+- Example: `./setup.sh`
 
 ## Appendix I: Version Comparison
 

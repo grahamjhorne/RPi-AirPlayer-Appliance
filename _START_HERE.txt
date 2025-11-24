@@ -18,8 +18,8 @@ PACKAGE CONTENTS (10 files)
 ════════════════════════════
 
 ESSENTIAL (3 files):
-  ✓ install.sh              - The script (for fresh install OR updates)
-  ✓ install.properties      - Your configuration file
+  ✓ setup.sh              - The script (for fresh install OR updates)
+  ✓ setup.properties      - Your configuration file
   ✓ [Air Player zip]        - Not included, you must provide
 
 DOCUMENTATION (7 files):
@@ -44,7 +44,7 @@ Quick steps:
 1. Image SD card with Raspberry Pi Imager
 2. Boot Pi, note IP
 3. Copy files via SCP
-4. Run install.sh with screen/tmux
+4. Run setup.sh with screen/tmux
 5. Reboot
 
 Details: See SETUP_GUIDE.md → Fresh Installation Workflow
@@ -55,9 +55,9 @@ When: Update settings on running system
 
 Quick steps:
 1. SSH into Pi
-2. Edit install.properties
-3. Run: ./install.sh --dry-run (preview)
-4. Run: ./install.sh (apply)
+2. Edit setup.properties
+3. Run: ./setup.sh --dry-run (preview)
+4. Run: ./setup.sh (apply)
 5. Reboot if prompted
 
 Details: See SETUP_GUIDE.md → Configuration Update Workflow
@@ -75,8 +75,8 @@ Result: Working Air Player in ~17 minutes
 PATH 2: Update Existing System
 ───────────────────────────────
 1. Read QUICK_REFERENCE.txt → Configuration Update section
-2. Edit install.properties
-3. Run ./install.sh --dry-run, then ./install.sh
+2. Edit setup.properties
+3. Run ./setup.sh --dry-run, then ./setup.sh
 Result: Updated config in <1 minute
 
 PATH 3: Understand v1.1 Features
@@ -89,8 +89,8 @@ Result: Full understanding of new capabilities
 PATH 4: Migrating from v1.0
 ────────────────────────────
 1. Read VERSION_CHANGES.txt
-2. Copy new install.sh to your Pi
-3. Run ./install.sh --dry-run
+2. Copy new setup.sh to your Pi
+3. Run ./setup.sh --dry-run
 Result: Ready to use update workflow
 
 WHAT'S NEW IN v1.1
@@ -109,7 +109,7 @@ BEFORE (v1.0):
   Change config → Reimage SD → Reinstall (~17 min) → New license
 
 NOW (v1.1):
-  Change config → Run install.sh (<1 min) → Done! License preserved
+  Change config → Run setup.sh (<1 min) → Done! License preserved
 
 COMMON OPERATIONS
 ═════════════════
@@ -119,36 +119,36 @@ Fresh Install:
   Time: ~17 minutes
 
 Change Display Rotation:
-  nano install.properties (edit SECONDARY_ROTATION=left)
-  ./install.sh --dry-run
-  ./install.sh
+  nano setup.properties (edit SECONDARY_ROTATION=left)
+  ./setup.sh --dry-run
+  ./setup.sh
   sudo reboot
   Time: <2 minutes
 
 Upgrade AirPlayer:
   cp ~/AirPlayer-5.1.zip ~/AirPlayer.zip
-  ./install.sh
+  ./setup.sh
   sudo systemctl restart lightdm
   Time: <1 minute
 
 Increase GPU Memory:
-  nano install.properties (edit GPU_MEMORY=512)
-  ./install.sh
+  nano setup.properties (edit GPU_MEMORY=512)
+  ./setup.sh
   sudo reboot
   Time: <2 minutes
 
 Add Third Display:
-  nano install.properties (NUM_DISPLAYS=3, configure tertiary)
-  ./install.sh
+  nano setup.properties (NUM_DISPLAYS=3, configure tertiary)
+  ./setup.sh
   sudo reboot
   Time: <2 minutes
 
 COMMAND REFERENCE
 ═════════════════
 
-./install.sh              Normal: Apply changes as needed
-./install.sh --dry-run    Preview: Show what would change
-./install.sh --force      Rebuild: Force all changes
+./setup.sh              Normal: Apply changes as needed
+./setup.sh --dry-run    Preview: Show what would change
+./setup.sh --force      Rebuild: Force all changes
 
 Check state:
   cat /var/lib/airplayer-appliance/state
@@ -208,8 +208,8 @@ If you're LEARNING ABOUT v1.1:
 
 If you're MIGRATING FROM v1.0:
 → Go to: VERSION_CHANGES.txt
-→ Replace install.sh on your Pi
-→ Run: ./install.sh --dry-run
+→ Replace setup.sh on your Pi
+→ Run: ./setup.sh --dry-run
 → Time: <5 minutes
 
 TROUBLESHOOTING
@@ -219,7 +219,7 @@ Something not working?
 
 1. QUICK_REFERENCE.txt → Troubleshooting section (quick fixes)
 2. SETUP_GUIDE.md → Troubleshooting section (detailed solutions)
-3. Try: ./install.sh --force (rebuild config in <1 min)
+3. Try: ./setup.sh --force (rebuild config in <1 min)
 4. Fresh install if needed (~17 minutes, guaranteed clean)
 
 WHAT YOU NEED
@@ -252,7 +252,7 @@ All documentation included:
   - Troubleshooting in multiple docs
 
 Still stuck?
-  - Try ./install.sh --force
+  - Try ./setup.sh --force
   - Check state: cat /var/lib/airplayer-appliance/state
   - Fresh rebuild: ~17 minutes for guaranteed clean state
 
@@ -261,20 +261,20 @@ VERSION COMPATIBILITY
 
 ✓ v1.1 is fully backward compatible with v1.0
 ✓ Fresh install workflow unchanged
-✓ Existing install.properties files work as-is
-✓ Can copy v1.1 install.sh to v1.0 system
+✓ Existing setup.properties files work as-is
+✓ Can copy v1.1 setup.sh to v1.0 system
 ✓ No breaking changes
 
 KEY FILES EXPLAINED
 ═══════════════════
 
-install.sh:
+setup.sh:
   - Main script for installation AND updates
   - NEW in v1.1: Idempotent (checks before acting)
   - NEW in v1.1: --dry-run and --force options
   - Use for fresh installs OR configuration updates
 
-install.properties:
+setup.properties:
   - Your configuration file
   - Network, display, security settings
   - Edit before first install OR on running system
@@ -321,7 +321,7 @@ Choose your path:
   Next → VERSION_CHANGES.txt → IDEMPOTENT_GUIDE.md
 
 □ MIGRATE FROM v1.0:
-  Next → VERSION_CHANGES.txt → Copy new install.sh
+  Next → VERSION_CHANGES.txt → Copy new setup.sh
 
 ═══════════════════════════════════════════════════════════════════════
 
