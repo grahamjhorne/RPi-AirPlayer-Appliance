@@ -23,7 +23,7 @@
    - Note IP address from screen
 
 3. COPY FILES
-   zip airplayer-setup.zip setup.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+   zip airplayer-setup.zip setup.sh setup.properties "Air Player 5.0 Linux ARM-64.zip"
    scp airplayer-setup.zip airman@<DHCP-IP>:.
 
 4. RUN INSTALLER (Use screen for safety!)
@@ -44,7 +44,7 @@
 
 Essential (3 files):
   setup.sh                          ← Setup and configuration script
-  install.properties                  ← Your configuration
+  setup.properties                  ← Your configuration
   Air Player 5.0 Linux ARM-64.zip    ← Air Player software
 
 Optional:
@@ -79,7 +79,7 @@ Security:
 │ CUSTOMIZATION                                                          │
 └───────────────────────────────────────────────────────────────────────┘
 
-Edit install.properties before deployment:
+Edit setup.properties before deployment:
 
 Network:
   NETWORK_IP=192.168.x.x
@@ -103,7 +103,7 @@ Then reimage and reinstall.
 
 1. Connect DSI ribbon cable
 2. Boot and check: export DISPLAY=:0 && xrandr (note DSI-1 or DSI-0)
-3. Edit install.properties:
+3. Edit setup.properties:
      NUM_DISPLAYS=3
      TERTIARY_DISPLAY=DSI-1
      TERTIARY_DISPLAY_ENABLED=yes
@@ -146,13 +146,13 @@ Can't SSH after first boot:
   - Test SSH key: ssh -v airman@<IP>
 
 Can't SSH at static IP:
-  - Use static IP from install.properties
+  - Use static IP from setup.properties
   - Default: ssh airman@192.168.5.198
 
 Displays not working:
   - Check HDMI cables
   - SSH in and run: export DISPLAY=:0 && xrandr
-  - Check install.properties settings
+  - Check setup.properties settings
 
 Air Player not running:
   - Check: ls /opt/AirPlayer
@@ -165,7 +165,7 @@ Under-voltage warning:
   - See SETUP_GUIDE.md Appendix C
 
 Wrong display orientation:
-  - Edit install.properties:
+  - Edit setup.properties:
     SECONDARY_ROTATION=left (or normal, right, inverted)
   - Reimage and reinstall
 
@@ -213,7 +213,7 @@ Under-voltage = crashes, instability, throttling
 Philosophy: Clean builds every time
 
 To change configuration:
-  1. Edit install.properties on your computer
+  1. Edit setup.properties on your computer
   2. Reimage microSD (5 minutes)
   3. Boot Pi, copy files, run setup script
   4. Total: ~15 minutes
@@ -262,7 +262,7 @@ After reboot: Fully functional Air Player appliance
 ✓ Keep a backup microSD with working config
 ✓ Document your display numbers (export DISPLAY=:0 && xrandr --listmonitors)
 ✓ Use proper power supply from the start
-✓ Keep install.properties backed up
+✓ Keep setup.properties backed up
 ✓ No keyboard needed after initial setup
 ✓ Everything done via SSH
 ✓ Rebuilds are fast - don't hesitate to start over

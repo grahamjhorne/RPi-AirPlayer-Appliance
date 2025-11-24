@@ -50,7 +50,7 @@ Fresh Installation:
 - [ ] SSH stays connected during installation (with screen/tmux)
 
 Configuration Updates:
-- [ ] Edit install.properties on running system
+- [ ] Edit setup.properties on running system
 - [ ] --dry-run shows correct preview
 - [ ] Script applies only necessary changes
 - [ ] Backups created before modifications
@@ -71,7 +71,7 @@ If you change functionality, update:
 - `SETUP_GUIDE.md` - If installation/update steps change
 - `QUICK_REFERENCE.txt` - If commands change
 - `IDEMPOTENT_GUIDE.md` - If idempotent behavior changes
-- `install.sh` comments - Keep code well-documented
+- `setup.sh` comments - Keep code well-documented
 
 ## Code Style
 
@@ -191,9 +191,9 @@ All configuration changes must be idempotent:
 - 2x HDMI displays (1920x1080, 800x600)
 
 **Steps:**
-1. Edited install.properties: SECONDARY_ROTATION=left
-2. Ran: ./install.sh --dry-run (showed would update)
-3. Ran: ./install.sh (completed successfully)
+1. Edited setup.properties: SECONDARY_ROTATION=left
+2. Ran: ./setup.sh --dry-run (showed would update)
+3. Ran: ./setup.sh (completed successfully)
 4. Rebooted system
 5. Display still landscape orientation
 

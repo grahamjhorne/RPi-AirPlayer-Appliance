@@ -27,13 +27,13 @@ PACKAGE CONTENTS (9 files)
 ESSENTIAL FILES (3 files)
 ─────────────────────────
 
-✓ install.sh (31KB)
+✓ setup.sh (31KB)
   - The main script
   - Use for: Fresh installs AND configuration updates
   - NEW: --dry-run and --force options
   - NEW: Idempotent operation (safe to rerun)
 
-✓ install.properties (1.6KB)
+✓ setup.properties (1.6KB)
   - Your configuration file
   - Network, display, security settings
   - Can edit on running system (v1.1)
@@ -100,7 +100,7 @@ UPDATED FILES FROM v1.0
 
 The following files were SIGNIFICANTLY UPDATED for v1.1:
 
-1. install.sh
+1. setup.sh
    - Added idempotent logic throughout
    - Added state tracking
    - Added automatic backups
@@ -172,7 +172,7 @@ NEW FILES IN v1.1
 WHAT DIDN'T CHANGE
 ══════════════════
 
-✓ install.properties format (unchanged)
+✓ setup.properties format (unchanged)
 ✓ Fresh installation workflow (same process)
 ✓ Security hardening (same standards)
 ✓ Installation time for fresh builds (~17 minutes)
@@ -183,17 +183,17 @@ BACKWARD COMPATIBILITY
 ══════════════════════
 
 ✓ Version 1.1 is fully backward compatible with v1.0
-✓ Existing install.properties files work as-is
+✓ Existing setup.properties files work as-is
 ✓ Fresh installation workflow unchanged
-✓ Can copy v1.1 install.sh to existing v1.0 system
+✓ Can copy v1.1 setup.sh to existing v1.0 system
 ✓ No breaking changes
 
 FILE SIZE SUMMARY
 ═════════════════
 
 Essential:
-  install.sh           31KB
-  install.properties   1.6KB
+  setup.sh           31KB
+  setup.properties   1.6KB
 
 Core Documentation:
   README.txt           15KB
@@ -236,7 +236,7 @@ QUICK REFERENCE:
 UNDERSTANDING v1.1:
 1. VERSION_CHANGES.txt
 2. IDEMPOTENT_GUIDE.md
-3. Try: ./install.sh --dry-run
+3. Try: ./setup.sh --dry-run
 
 TWO WORKFLOWS EXPLAINED
 ═══════════════════════
@@ -244,14 +244,14 @@ TWO WORKFLOWS EXPLAINED
 WORKFLOW 1: Fresh Installation
   When: First time, new Pi, want clean state
   Time: ~17 minutes
-  Steps: Image SD → Copy files → Run install.sh → Reboot
+  Steps: Image SD → Copy files → Run setup.sh → Reboot
   Result: Fresh, hardened Air Player appliance
   Docs: SETUP_GUIDE.md → Fresh Installation Workflow
 
 WORKFLOW 2: Configuration Update (NEW v1.1)
   When: Change settings on running system
   Time: <1 minute + reboot if needed
-  Steps: Edit properties → --dry-run → Run install.sh → Reboot if needed
+  Steps: Edit properties → --dry-run → Run setup.sh → Reboot if needed
   Result: Updated configuration, license preserved
   Docs: SETUP_GUIDE.md → Configuration Update Workflow
 
@@ -259,8 +259,8 @@ DEPLOYMENT CHECKLIST
 ════════════════════
 
 Before Fresh Installation:
-□ install.sh
-□ install.properties (edited for your setup)
+□ setup.sh
+□ setup.properties (edited for your setup)
 □ Air Player 5.0 Linux ARM-64.zip
 □ Raspberry Pi 5
 □ 16-32GB microSD card
@@ -274,7 +274,7 @@ Before Configuration Update:
 □ Existing working system
 □ SSH access
 □ Know what you want to change
-□ Optionally: new install.sh (v1.1)
+□ Optionally: new setup.sh (v1.1)
 
 VERIFICATION
 ════════════
@@ -282,8 +282,8 @@ VERIFICATION
 After downloading package, verify:
 
 Required files present:
-  ✓ install.sh
-  ✓ install.properties
+  ✓ setup.sh
+  ✓ setup.properties
   
 Documentation present:
   ✓ README.txt
@@ -300,15 +300,15 @@ VERSION CHECKING
 
 To verify you have v1.1:
 
-Check install.sh version:
-  $ grep "Version 1.1" install.sh
+Check setup.sh version:
+  $ grep "Version 1.1" setup.sh
 
 Check documentation version:
   $ head -5 README.txt | grep "Version 1.1"
   $ head -5 SETUP_GUIDE.md | grep "Version 1.1"
 
 Look for v1.1 features:
-  $ grep -i "idempotent\|dry-run\|--force" install.sh
+  $ grep -i "idempotent\|dry-run\|--force" setup.sh
 
 SUPPORT
 ═══════
@@ -325,7 +325,7 @@ Questions about v1.1:
 
 Issues:
   - Check troubleshooting sections
-  - Try: ./install.sh --force
+  - Try: ./setup.sh --force
   - Review state: /var/lib/airplayer-appliance/state
   - Check backups: /var/backups/airplayer-appliance/
 
@@ -335,19 +335,19 @@ WHAT TO KEEP
 After successful installation:
 
 Keep these files:
-  ✓ install.sh (for updates!)
-  ✓ install.properties (your config)
+  ✓ setup.sh (for updates!)
+  ✓ setup.properties (your config)
   ✓ Air Player zip (for upgrades)
   ✓ All documentation (reference)
 
 Put in version control:
-  ✓ install.properties
-  ✓ install.sh (track versions)
+  ✓ setup.properties
+  ✓ setup.sh (track versions)
   ✓ Notes on your configuration
 
 Backup:
   ✓ Working SD card image
-  ✓ install.properties
+  ✓ setup.properties
   ✓ Documentation
 
 UPGRADE PATH
@@ -356,11 +356,11 @@ UPGRADE PATH
 From v1.0 to v1.1:
 
 On your Raspberry Pi:
-  $ scp new-install.sh airman@192.168.5.198:install.sh
+  $ scp new-setup.sh airman@192.168.5.198:setup.sh
   $ ssh airman@192.168.5.198
-  $ chmod +x install.sh
-  $ ./install.sh --dry-run  # Preview
-  $ ./install.sh            # Establish state
+  $ chmod +x setup.sh
+  $ ./setup.sh --dry-run  # Preview
+  $ ./setup.sh            # Establish state
 
 Now you can use update workflow!
 
@@ -369,7 +369,7 @@ NEXT STEPS
 
 FIRST TIME:
   1. Read _START_HERE_V1.1.txt
-  2. Edit install.properties
+  2. Edit setup.properties
   3. Follow SETUP_GUIDE.md → Fresh Installation
   4. Verify installation
   5. Learn update workflow
@@ -377,13 +377,13 @@ FIRST TIME:
 EXISTING USER:
   1. Read VERSION_CHANGES.txt
   2. Read IDEMPOTENT_GUIDE.md  
-  3. Replace install.sh with v1.1 version
-  4. Run: ./install.sh --dry-run
+  3. Replace setup.sh with v1.1 version
+  4. Run: ./setup.sh --dry-run
   5. Start using updates!
 
 DEVELOPER:
   1. Read all documentation
-  2. Review install.sh code
+  2. Review setup.sh code
   3. Read CONTRIBUTING.md
   4. Test both workflows
   5. Submit improvements

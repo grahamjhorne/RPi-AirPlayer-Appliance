@@ -40,7 +40,7 @@ TWO WORKFLOWS
   Time: ~17 minutes
 
 **Workflow 2: Configuration Updates (Version 1.1 NEW!)**
-  - Edit install.properties on running system
+  - Edit setup.properties on running system
   - Run ./setup.sh --dry-run (preview changes)
   - Run ./setup.sh (apply changes)
   - Reboot if needed (only for network/display changes)
@@ -95,7 +95,7 @@ FILES
 
 Essential (3 files):
   ✓ setup.sh              - Setup and configuration script
-  ✓ install.properties      - Your configuration
+  ✓ setup.properties      - Your configuration
   ✓ Air Player 5.0 Linux ARM-64.zip (you provide)
 
 Documentation:
@@ -118,7 +118,7 @@ QUICK START
    - Note IP address from screen (or check router)
 
 3. COPY FILES
-   zip airplayer-setup.zip setup.sh install.properties "Air Player 5.0 Linux ARM-64.zip"
+   zip airplayer-setup.zip setup.sh setup.properties "Air Player 5.0 Linux ARM-64.zip"
    scp airplayer-setup.zip airman@<DHCP-IP>:.
 
 4. RUN INSTALLER (Use screen or tmux for safety)
@@ -170,7 +170,7 @@ WHY USE SCREEN/TMUX?
 CONFIGURATION
 ═════════════
 
-Edit install.properties before deployment:
+Edit setup.properties before deployment:
 
 Network:
   NETWORK_IP=192.168.5.198           # Your static IP
@@ -213,7 +213,7 @@ MAKING CHANGES
 
 To change any configuration:
 
-1. Edit install.properties on your computer
+1. Edit setup.properties on your computer
 2. Reimage microSD card (5 minutes)
 3. Boot Pi and run setup script (10 minutes)
 4. Done!
@@ -308,14 +308,14 @@ Can't SSH after first boot:
 
 Can't SSH at static IP after installation:
   ✓ Wait 2-3 minutes for full boot
-  ✓ Use the IP from install.properties (default: 192.168.5.198)
+  ✓ Use the IP from setup.properties (default: 192.168.5.198)
   ✓ Check gateway and network settings
   ✓ Verify you're on the correct network
 
 Displays not working:
   ✓ Check HDMI cables are firmly connected
   ✓ SSH in and run: export DISPLAY=:0 && xrandr (shows detected displays)
-  ✓ Check install.properties display configuration
+  ✓ Check setup.properties display configuration
   ✓ Verify display IDs match (HDMI-1, HDMI-2, etc.)
 
 Air Player not running:
@@ -336,7 +336,7 @@ Under-voltage warning:
   ✓ Check voltage: vcgencmd pmic_read_adc EXT5V_V
 
 Wrong display orientation:
-  ✓ Edit install.properties:
+  ✓ Edit setup.properties:
     SECONDARY_ROTATION=left (or right, inverted, normal)
   ✓ Reimage and reinstall
 
@@ -391,7 +391,7 @@ TIPS
 ════
 
 ✓ Always use screen or tmux for remote installations
-✓ Keep install.properties backed up with version control
+✓ Keep setup.properties backed up with version control
 ✓ Test with 1 display first before adding more
 ✓ Use proper power supply from the start
 ✓ Document your working configuration
@@ -458,7 +458,7 @@ MAINTENANCE
 This is an appliance - no maintenance required.
 
 If updates needed:
-  - Edit install.properties
+  - Edit setup.properties
   - Reimage SD card
   - Reinstall (15 minutes)
 
@@ -469,7 +469,7 @@ BACKUP STRATEGY
 ═══════════════
 
 Recommended:
-  ✓ Keep install.properties in version control
+  ✓ Keep setup.properties in version control
   ✓ Keep a working SD card image
   ✓ Keep a spare SD card with working config
 

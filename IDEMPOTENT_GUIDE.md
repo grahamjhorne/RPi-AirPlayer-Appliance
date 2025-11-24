@@ -8,20 +8,20 @@ The script is now **idempotent** - safe to run multiple times. It checks the cur
 
 ### First Installation (Fresh RPi)
 ```bash
-chmod +x install.sh
-./install.sh
+chmod +x setup.sh
+./setup.sh
 ```
 
 ### Update Display Configuration
 ```bash
-# Edit install.properties (change display settings)
-nano install.properties
+# Edit setup.properties (change display settings)
+nano setup.properties
 
 # Dry-run to see what would change
-./install.sh --dry-run
+./setup.sh --dry-run
 
 # Apply changes
-./install.sh
+./setup.sh
 ```
 
 ### Upgrade AirPlayer
@@ -30,17 +30,17 @@ nano install.properties
 cp AirPlayer-new.zip AirPlayer.zip
 
 # Run installer (will extract new version)
-./install.sh
+./setup.sh
 ```
 
 ### Check Configuration Without Changes
 ```bash
-./install.sh --dry-run
+./setup.sh --dry-run
 ```
 
 ### Force All Changes (Rebuild Everything)
 ```bash
-./install.sh --force
+./setup.sh --force
 ```
 
 ## Command Line Options
@@ -91,7 +91,7 @@ All modified files are backed up to `/var/backups/airplayer-appliance/`:
 
 ### Dry-Run Before Making Changes
 ```bash
-$ ./install.sh --dry-run
+$ ./setup.sh --dry-run
 ╔═══════════════════════════════════════════════════════════════════╗
 ║     Air Player Appliance Builder - Raspberry Pi 5                 ║
 ║     Idempotent Configuration Management                           ║
@@ -158,19 +158,19 @@ Run without --dry-run to apply changes
 ### Change Display Configuration
 ```bash
 # Edit properties
-$ nano install.properties
+$ nano setup.properties
 # Change NUM_DISPLAYS=2 to NUM_DISPLAYS=3
 # Add tertiary display settings
 
 # See what would change
-$ ./install.sh --dry-run
+$ ./setup.sh --dry-run
 [8/10] Updating Display Configuration...
   → Regenerating Openbox autostart (display config from properties)
     Would write: /home/airman/.config/openbox/autostart
     Displays: 3
 
 # Apply changes
-$ ./install.sh
+$ ./setup.sh
 [8/10] Updating Display Configuration...
   → Regenerating Openbox autostart (display config from properties)
     Backed up: /home/airman/.config/openbox/autostart → ...
@@ -185,7 +185,7 @@ Changes were made. A reboot is recommended...
 $ cp ~/Downloads/AirPlayer-5.1.zip AirPlayer.zip
 
 # Update (will extract new version)
-$ ./install.sh
+$ ./setup.sh
 
 [7/10] Checking Air Player Installation...
   → Extracting/updating Air Player
@@ -222,41 +222,41 @@ Archive:  AirPlayer.zip
 
 ### 1. Initial Installation
 ```bash
-./install.sh
+./setup.sh
 # Configures everything, reboots
 ```
 
 ### 2. Change Monitor Layout
 ```bash
-# Edit display settings in install.properties
-./install.sh --dry-run  # Check changes
-./install.sh            # Apply
+# Edit display settings in setup.properties
+./setup.sh --dry-run  # Check changes
+./setup.sh            # Apply
 # Reboot to apply display changes
 ```
 
 ### 3. Upgrade AirPlayer Software
 ```bash
 # Replace zip file
-./install.sh  # Extracts new version
+./setup.sh  # Extracts new version
 # Restart X or reboot
 ```
 
 ### 4. Change Network Settings
 ```bash
-# Edit network settings in install.properties
-./install.sh --dry-run  # Preview
-./install.sh            # Apply
+# Edit network settings in setup.properties
+./setup.sh --dry-run  # Preview
+./setup.sh            # Apply
 # Reboot for network changes
 ```
 
 ### 5. Audit Current Configuration
 ```bash
-./install.sh --dry-run  # Shows current state
+./setup.sh --dry-run  # Shows current state
 ```
 
 ### 6. Fix Broken Config
 ```bash
-./install.sh --force  # Reconfigure everything
+./setup.sh --force  # Reconfigure everything
 ```
 
 ## State File
@@ -321,7 +321,7 @@ The old script can still be used for first installs, but the new script is recom
 **Old workflow:**
 ```bash
 # Change config
-nano install.properties
+nano setup.properties
 # Reimage SD card
 # Reinstall everything
 ```
@@ -329,9 +329,9 @@ nano install.properties
 **New workflow:**
 ```bash
 # Change config
-nano install.properties
+nano setup.properties
 # Rerun script
-./install.sh
+./setup.sh
 # Reboot if needed
 ```
 
@@ -347,7 +347,7 @@ Much faster! No reimaging needed.
 ## Tips
 
 1. Always `--dry-run` first when unsure
-2. Keep `install.properties` in version control
+2. Keep `setup.properties` in version control
 3. Note the backup directory for rollbacks
 4. State file tracks what's been done
 5. Use `--force` to reconfigure everything
