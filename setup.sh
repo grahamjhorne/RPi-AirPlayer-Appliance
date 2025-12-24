@@ -39,14 +39,14 @@ done
 # Configuration - Load from properties file
 # ============================================================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROPERTIES_FILE="${SCRIPT_DIR}/install.properties"
+PROPERTIES_FILE="${SCRIPT_DIR}/setup.properties"
 BACKUP_DIR="/var/backups/airplayer-appliance"
 STATE_FILE="/var/lib/airplayer-appliance/state"
 
 # Check if properties file exists
 if [[ ! -f "$PROPERTIES_FILE" ]]; then
-    echo "ERROR: install.properties not found!"
-    echo "Please create install.properties file"
+    echo "ERROR: setup.properties not found!"
+    echo "Please create setup.properties file"
     exit 1
 fi
 
@@ -251,10 +251,18 @@ AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2
 IgnoreRhosts yes
 PasswordAuthentication no
 KerberosAuthentication no
-AllowAgentForwarding yes
-AllowTcpForwarding yes
+AllowAgentForwarding no
+AllowTcpForwarding no
 X11Forwarding no
 PrintMotd no
+LoginGraceTime 30
+MaxAuthTries 3
+MaxSessions 2
+ClientAliveInterval 300
+ClientAliveCountMax 2
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM no
 TCPKeepAlive yes
 Subsystem sftp /usr/lib/openssh/sftp-server"
 
@@ -286,7 +294,7 @@ REQUIRED_PACKAGES=(
     xserver-xorg-core xserver-xorg xinit x11-xserver-utils
     libzip5 libgtk-3-0 libfreeimage3 libcurl4 libusb-1.0-0
     libcanberra-gtk3-module libegl1 libgles2
-    openbox xterm unclutter ufw
+    openbox xterm unclutter ufw fail2ban
 )
 
 MISSING_PACKAGES=()
@@ -810,6 +818,40 @@ if ! grep -q "^IPV6=no" "$UFW_CONF" || [[ "$FORCE" == "true" ]]; then
 else
     echo -e "${GREEN}  ✓ Firewall already configured${NC}"
 fi
+
+# Configure fail2ban
+FAIL2BAN_CONF="/etc/fail2ban/jail.local"
+if [[ ! -f "$FAIL2BAN_CONF" ]] || [[ "$FORCE" == "true" ]]; then
+    echo -e "${YELLOW}  → Configuring fail2ban${NC}"
+    backup_file "$FAIL2BAN_CONF"
+    
+    if [[ "$DRY_RUN" == "false" ]]; then
+        cat | sudo tee "$FAIL2BAN_CONF" > /dev/null << EOF
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 3
+backend = systemd
+banaction = ufw
+
+[sshd]
+enabled = true
+port = ${SSH_PORT}
+logpath = /var/log/auth.log
+EOF
+        sudo systemctl enable fail2ban
+        sudo systemctl restart fail2ban 2>/dev/null || true
+        CHANGES_MADE=true
+    else
+        echo -e "${CYAN}    Would write: $FAIL2BAN_CONF${NC}"
+        echo -e "${CYAN}    Would enable and start fail2ban${NC}"
+    fi
+    echo -e "${GREEN}  ✓ fail2ban configured${NC}"
+else
+    echo -e "${GREEN}  ✓ fail2ban already configured${NC}"
+fi
+
+update_state "fail2ban_configured" "$(date +%Y%m%d)"
 
 # Disable unnecessary services
 echo -e "${YELLOW}  → Checking unnecessary services${NC}"
