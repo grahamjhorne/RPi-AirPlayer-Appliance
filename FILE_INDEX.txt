@@ -52,13 +52,13 @@
 │ CORE FILES (REQUIRED)                                                 │
 └───────────────────────────────────────────────────────────────────────┘
 
-→ install.sh (17KB) ⭐ THE SCRIPT
+→ setup.sh (17KB) ⭐ THE SCRIPT
   Run this on your Raspberry Pi for:
   - Fresh installation
   - Configuration updates
   - AirPlayer upgrades
   
-→ install.properties (1.6KB) ⭐ CONFIGURATION FILE
+→ setup.properties (1.6KB) ⭐ CONFIGURATION FILE
   Edit this for your network and display setup
   Can be edited on running system (v1.1)
   Example configuration included
@@ -119,7 +119,7 @@ PATH 3: TROUBLESHOOTING
    → Appendix G: State and backup locations
    
 4. Try configuration rebuild (v1.1)
-   → ./install.sh --force
+   → ./setup.sh --force
    → <1 minute to reconfigure
    
 5. Or fresh rebuild (if needed)
@@ -141,8 +141,8 @@ PATH 4: UNDERSTANDING IDEMPOTENT FEATURES (v1.1)
    → Quick command reference
    
 3. Try it yourself
-   → Edit install.properties
-   → Run: ./install.sh --dry-run
+   → Edit setup.properties
+   → Run: ./setup.sh --dry-run
    → See what would change
 
 RESULT: Full understanding of update capabilities
@@ -196,13 +196,13 @@ IDEMPOTENT_GUIDE.md (12KB) ⭐ NEW IN v1.1
   Contains: State tracking, backups, --dry-run/--force,
             examples, migration from v1.0
 
-install.sh (17KB) ⭐
+setup.sh (17KB) ⭐
   What:     The installation and configuration script
   For:      Raspberry Pi
   When:     Fresh install OR configuration updates
   Contains: All automation, idempotent logic, well-commented code
 
-install.properties (1.6KB) ⭐
+setup.properties (1.6KB) ⭐
   What:     Configuration file
   For:      Customize before OR after installation
   When:     Before first install OR when updating config
@@ -218,7 +218,7 @@ CONTRIBUTING.md (7KB)
 │ DOCUMENTATION STATISTICS                                               │
 └───────────────────────────────────────────────────────────────────────┘
 
-Total Files:           8 files (5 docs + install.sh + install.properties + LICENSE)
+Total Files:           8 files (5 docs + setup.sh + setup.properties + LICENSE)
 Total Size:            ~95KB
 Reading Time:          ~55 minutes (all documents)
 Fresh Install Time:    17 minutes (following guide)
@@ -248,7 +248,7 @@ Step 1: Read (20 minutes)
   □ QUICK_REFERENCE.txt → Fresh Installation (10 min)
 
 Step 2: Prepare (15 minutes)
-  □ Edit install.properties
+  □ Edit setup.properties
   □ Generate SSH keys (if needed)
   □ Download Raspberry Pi Imager
   □ Gather hardware
@@ -276,9 +276,9 @@ Step 1: Quick Review (5 minutes)
   □ QUICK_REFERENCE.txt → Configuration Update Workflow
   
 Step 2: Update (1 minute)
-  □ Edit install.properties
-  □ ./install.sh --dry-run
-  □ ./install.sh
+  □ Edit setup.properties
+  □ ./setup.sh --dry-run
+  □ ./setup.sh
   □ Reboot if prompted
 
 Step 3: Learn More (optional, 10 minutes)
@@ -311,13 +311,13 @@ OPTIONAL:
 └───────────────────────────────────────────────────────────────────────┘
 
 Put these in version control (git):
-  □ install.sh (track script versions)
-  □ install.properties (your customized version)
+  □ setup.sh (track script versions)
+  □ setup.properties (your customized version)
   □ All documentation (for reference)
 
 Track changes to:
-  □ install.properties (your network/display settings)
-  □ Any customizations to install.sh
+  □ setup.properties (your network/display settings)
+  □ Any customizations to setup.sh
   □ Notes on what works for your setup
 
 Benefits:
@@ -337,13 +337,13 @@ Having issues? Check in this order:
 1. QUICK_REFERENCE.txt → Troubleshooting
 2. SETUP_GUIDE.md → Troubleshooting section
 3. SETUP_GUIDE.md → Relevant Appendix
-4. Try: ./install.sh --force (v1.1, <1 minute)
+4. Try: ./setup.sh --force (v1.1, <1 minute)
 5. Consider fresh rebuild (17 minutes)
 
 Configuration not working after update (v1.1)?
   - Check: cat /var/lib/airplayer-appliance/state
   - Check: ls -la /var/backups/airplayer-appliance/
-  - Try: ./install.sh --force
+  - Try: ./setup.sh --force
 
 ┌───────────────────────────────────────────────────────────────────────┐
 │ USEFUL LINKS & RESOURCES                                               │

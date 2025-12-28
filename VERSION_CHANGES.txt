@@ -34,14 +34,14 @@ Version 1.1 adds **idempotent configuration management** - the ability to update
 - Example: `config.txt.20241122_143052`
 
 ### 5. Configuration Updates Without Reimaging
-- Edit install.properties on running system
-- Run install.sh to apply changes
+- Edit setup.properties on running system
+- Run setup.sh to apply changes
 - Complete in <1 minute (vs 17 minutes)
 - Reboot only if needed
 
 ### 6. AirPlayer Upgrade Support
 - Replace AirPlayer zip file
-- Run install.sh to extract new version
+- Run setup.sh to extract new version
 - Preserves configuration and license
 - No full reimage needed
 
@@ -64,7 +64,7 @@ Version 1.1 adds **idempotent configuration management** - the ability to update
 **None.** Version 1.1 is fully backward compatible with version 1.0.
 
 Existing systems:
-- Copy the new install.sh to your Pi
+- Copy the new setup.sh to your Pi
 - Start using the update workflow
 - Or continue using fresh installs as before
 
@@ -123,7 +123,7 @@ All existing documentation updated to cover both workflows:
 - Upgrade AirPlayer
 - Add or remove displays
 - Modify firewall rules
-- Any install.properties change
+- Any setup.properties change
 - Preserve AirPlayer license
 
 ## Technical Details
@@ -153,7 +153,7 @@ fstab.20241122_143055
 ### Idempotent Logic
 Each configuration section:
 1. Checks current state
-2. Compares with desired state from install.properties
+2. Compares with desired state from setup.properties
 3. Skips if already correct
 4. Backs up before modifying (if needed)
 5. Applies changes (if needed)
@@ -165,9 +165,9 @@ Each configuration section:
 ### From v1.0 to v1.1
 
 **Existing v1.0 Systems:**
-1. Copy new install.sh to your Pi (replaces old version)
-2. Keep your existing install.properties
-3. Run: `./install.sh --dry-run` to see current state
+1. Copy new setup.sh to your Pi (replaces old version)
+2. Keep your existing setup.properties
+3. Run: `./setup.sh --dry-run` to see current state
 4. Now you can use update workflow
 
 **No Migration Required:**
@@ -178,10 +178,10 @@ Each configuration section:
 
 **Recommended:**
 ```bash
-# After copying new install.sh
-chmod +x install.sh
-./install.sh --dry-run    # See current state
-./install.sh              # Establish state file
+# After copying new setup.sh
+chmod +x setup.sh
+./setup.sh --dry-run    # See current state
+./setup.sh              # Establish state file
 ```
 
 ## Examples
@@ -189,16 +189,16 @@ chmod +x install.sh
 ### Example 1: Change Display Rotation
 ```bash
 # v1.0 way (still works):
-# 1. Edit install.properties on computer
+# 1. Edit setup.properties on computer
 # 2. Reimage SD card (~5 minutes)
 # 3. Run full installation (~10 minutes)
 # Total: ~17 minutes
 
 # v1.1 way (NEW):
 ssh airman@192.168.5.198
-nano install.properties   # Change SECONDARY_ROTATION=left
-./install.sh --dry-run    # Preview
-./install.sh              # Apply (<30 seconds)
+nano setup.properties   # Change SECONDARY_ROTATION=left
+./setup.sh --dry-run    # Preview
+./setup.sh              # Apply (<30 seconds)
 sudo reboot              # Apply display change
 # Total: <2 minutes
 ```
@@ -211,7 +211,7 @@ sudo reboot              # Apply display change
 # v1.1 way (NEW):
 ssh airman@192.168.5.198
 cp ~/AirPlayer-5.1.zip ~/AirPlayer.zip
-./install.sh             # Extracts new version
+./setup.sh             # Extracts new version
 sudo systemctl restart lightdm
 # Total: <1 minute
 ```
@@ -223,9 +223,9 @@ sudo systemctl restart lightdm
 
 # v1.1 way (NEW):
 ssh airman@192.168.5.198
-nano install.properties  # GPU_MEMORY=512
-./install.sh --dry-run   # See what changes
-./install.sh             # Apply
+nano setup.properties  # GPU_MEMORY=512
+./setup.sh --dry-run   # See what changes
+./setup.sh             # Apply
 sudo reboot             # For boot config
 # Total: <2 minutes
 ```
@@ -245,15 +245,15 @@ sudo reboot
 
 ### Rollback All Configuration
 ```bash
-# Force rebuild from install.properties
-./install.sh --force
+# Force rebuild from setup.properties
+./setup.sh --force
 sudo reboot
 ```
 
 ### Complete Rollback
 ```bash
 # If v1.1 causes issues, revert to v1.0:
-# 1. Keep old v1.0 install.sh backed up
+# 1. Keep old v1.0 setup.sh backed up
 # 2. Copy it back
 # 3. Do fresh install (v1.0 style)
 ```
@@ -287,7 +287,7 @@ For issues or questions about v1.1:
 2. Check SETUP_GUIDE.md troubleshooting section
 3. Review state file: `cat /var/lib/airplayer-appliance/state`
 4. Check backups: `ls -la /var/backups/airplayer-appliance/`
-5. Try: `./install.sh --force`
+5. Try: `./setup.sh --force`
 6. Open an issue with detailed information
 
 ## Upgrade Recommendation
@@ -303,7 +303,7 @@ Benefits:
 
 Installation:
 - New systems: Get v1.1 package
-- Existing systems: Replace install.sh with v1.1 version
+- Existing systems: Replace setup.sh with v1.1 version
 
 ---
 
