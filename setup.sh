@@ -10,6 +10,20 @@ set -e  # Exit on any error
 set -u  # Exit on undefined variable
 
 # ============================================================================
+# Error handling and cleanup
+# ============================================================================
+cleanup_and_log() {
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        log_message "!!! SCRIPT FAILED WITH EXIT CODE: $exit_code !!!"
+        log_message "Last successful section may be visible above"
+        echo -e "${RED}Setup failed! Check log: $SETUP_LOG_LINK${NC}"
+    fi
+}
+
+trap cleanup_and_log EXIT
+
+# ============================================================================
 # Parse command line arguments
 # ============================================================================
 DRY_RUN=false
@@ -62,6 +76,40 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
+
+# ============================================================================
+# Logging Configuration
+# ============================================================================
+SETUP_LOG="/tmp/airplayer-setup-$(date +%Y%m%d-%H%M%S).log"
+SETUP_LOG_LINK="/tmp/airplayer-setup-latest.log"
+
+# Function to log messages
+log_message() {
+    local message="$1"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "[$timestamp] $message" >> "$SETUP_LOG"
+}
+
+# Function to log and display
+log_and_echo() {
+    local message="$1"
+    echo -e "$message"
+    # Strip color codes for log file
+    local clean_message=$(echo -e "$message" | sed 's/\x1b\[[0-9;]*m//g')
+    log_message "$clean_message"
+}
+
+# Create symlink to latest log
+ln -sf "$SETUP_LOG" "$SETUP_LOG_LINK"
+
+# Log script start
+log_message "========================================="
+log_message "Air Player Appliance Builder - Setup Log"
+log_message "========================================="
+log_message "Script started"
+log_message "Dry run: $DRY_RUN"
+log_message "Force mode: $FORCE"
+log_message "Log file: $SETUP_LOG"
 
 # ============================================================================
 # Utility Functions
@@ -174,11 +222,12 @@ EOF
 echo -e "${NC}"
 
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo -e "${YELLOW}*** DRY RUN MODE - No changes will be made ***${NC}"
+    log_and_echo "${YELLOW}*** DRY RUN MODE - No changes will be made ***${NC}"
 fi
 
-echo "Starting at $(date)"
-echo "Configuration: $PROPERTIES_FILE"
+log_and_echo "Starting at $(date)"
+log_and_echo "Configuration: $PROPERTIES_FILE"
+log_and_echo "Setup log: $SETUP_LOG"
 echo ""
 
 init_state
@@ -188,7 +237,9 @@ CHANGES_MADE=false
 # ============================================================================
 # 1. NETWORK CONFIGURATION
 # ============================================================================
+log_message "=== SECTION 1: Network Configuration ==="
 echo -e "${BLUE}[1/10] Checking Network Configuration...${NC}"
+log_message "Checking network configuration"
 
 NETWORK_FILE="/etc/systemd/network/10-${NETWORK_INTERFACE}.network"
 NETWORK_CONTENT="[Match]
@@ -237,6 +288,7 @@ update_state "network_configured" "$(date +%Y%m%d)"
 # ============================================================================
 # 2. SSH HARDENING
 # ============================================================================
+log_message "=== SECTION 2: SSH Hardening ==="
 echo -e "${BLUE}[2/10] Checking SSH Configuration...${NC}"
 
 SSH_CONFIG="/etc/ssh/sshd_config"
@@ -262,7 +314,7 @@ ClientAliveInterval 300
 ClientAliveCountMax 2
 PermitEmptyPasswords no
 ChallengeResponseAuthentication no
-UsePAM no
+UsePAM yes
 TCPKeepAlive yes
 Subsystem sftp /usr/lib/openssh/sftp-server"
 
@@ -288,6 +340,7 @@ update_state "ssh_configured" "$(date +%Y%m%d)"
 # ============================================================================
 # 3. SYSTEM UPDATE & PACKAGE INSTALLATION
 # ============================================================================
+log_message "=== SECTION 3: System Packages ==="
 echo -e "${BLUE}[3/10] Checking System Packages...${NC}"
 
 REQUIRED_PACKAGES=(
@@ -327,6 +380,7 @@ update_state "packages_installed" "$(date +%Y%m%d)"
 # ============================================================================
 # 4. AUTO-LOGIN CONFIGURATION
 # ============================================================================
+log_message "=== SECTION 4: Auto-Login Configuration ==="
 echo -e "${BLUE}[4/10] Checking Auto-Login Configuration...${NC}"
 
 AUTOLOGIN_DIR="/etc/systemd/system/getty@tty1.service.d"
@@ -379,6 +433,7 @@ update_state "autologin_configured" "$(date +%Y%m%d)"
 # ============================================================================
 # 5. X11 CONFIGURATION
 # ============================================================================
+log_message "=== SECTION 5: X11 Configuration ==="
 echo -e "${BLUE}[5/10] Checking X11 Configuration...${NC}"
 
 XINITRC_FILE="${SYSTEM_USER_HOME}/.xinitrc"
@@ -413,7 +468,7 @@ fi
 
 # Xorg configuration
 XORG_CONF_DIR="/etc/X11/xorg.conf.d"
-XORG_CONF_FILE="$XORG_CONF_DIR/10-vc4.conf"
+XORG_CONF_FILE="$XORG_CONF_DIR/10-vc4.conf"zip airplayer-setup.zip setup.sh setup.properties AirPlayer.zip diagnostics.sh
 XORG_CONTENT='Section "Device"
     Identifier "VC4 Graphics"
     Driver "modesetting"
@@ -445,28 +500,112 @@ update_state "x11_configured" "$(date +%Y%m%d)"
 # ============================================================================
 # 6. BOOT CONFIGURATION (GPU, DISABLE WIFI/BT)
 # ============================================================================
+log_message "=== SECTION 6: Boot Configuration ==="
 echo -e "${BLUE}[6/10] Checking Boot Configuration...${NC}"
 
 BOOT_CONFIG="/boot/firmware/config.txt"
 backup_file "$BOOT_CONFIG"
 
-# Check/update gpu_mem
-CURRENT_GPU_MEM=$(grep "^gpu_mem=" "$BOOT_CONFIG" 2>/dev/null | cut -d= -f2 || echo "")
-if [[ "$CURRENT_GPU_MEM" != "$GPU_MEMORY" ]] || [[ "$FORCE" == "true" ]]; then
-    echo -e "${YELLOW}  → Setting GPU memory to ${GPU_MEMORY}MB${NC}"
-    
-    if [[ "$DRY_RUN" == "false" ]]; then
-        if grep -q "^gpu_mem=" "$BOOT_CONFIG"; then
-            sudo sed -i "s/^gpu_mem=.*/gpu_mem=${GPU_MEMORY}/" "$BOOT_CONFIG"
-        else
-            echo "gpu_mem=${GPU_MEMORY}" | sudo tee -a "$BOOT_CONFIG" > /dev/null
-        fi
-        CHANGES_MADE=true
+# ============================================================================
+# GPU / CMA MEMORY CONFIGURATION (Pi 4 and Pi 5 compatible)
+# ============================================================================
+# Raspberry Pi 4: Uses gpu_mem parameter (fixed allocation)
+# Raspberry Pi 5: Uses CMA overlay (dynamic allocation via dtoverlay=cma,cma-XXX)
+# ============================================================================
+
+# Detect Pi model if not specified in properties
+if [[ -z "$RASPI_MODEL" ]] || [[ "$RASPI_MODEL" != "4" && "$RASPI_MODEL" != "5" ]]; then
+    PI_MODEL_STRING=$(cat /proc/device-tree/model 2>/dev/null || echo "")
+    if [[ "$PI_MODEL_STRING" == *"Raspberry Pi 5"* ]]; then
+        RASPI_MODEL=5
+        echo -e "${YELLOW}  → Auto-detected: Raspberry Pi 5${NC}"
+        log_message "Auto-detected Raspberry Pi 5"
     else
-        echo -e "${CYAN}    Would set: gpu_mem=${GPU_MEMORY}${NC}"
+        RASPI_MODEL=4
+        echo -e "${YELLOW}  → Auto-detected: Raspberry Pi 4 (or earlier)${NC}"
+        log_message "Auto-detected Raspberry Pi 4 or earlier"
     fi
+fi
+
+if [[ "$RASPI_MODEL" == "5" ]]; then
+    # ========================================================================
+    # RASPBERRY PI 5: Use CMA instead of gpu_mem
+    # ========================================================================
+    echo -e "${YELLOW}  → Configuring GPU memory for Raspberry Pi 5 (CMA)${NC}"
+    log_message "Raspberry Pi 5 detected - using CMA instead of gpu_mem"
+    
+    # Remove obsolete gpu_mem setting (Pi 5 ignores it)
+    if grep -q "^gpu_mem=" "$BOOT_CONFIG"; then
+        echo -e "${YELLOW}  → Removing obsolete gpu_mem setting (not used on Pi 5)${NC}"
+        log_message "Removing gpu_mem from config.txt (obsolete on Pi 5)"
+        
+        if [[ "$DRY_RUN" == "false" ]]; then
+            sudo sed -i '/^gpu_mem=/d' "$BOOT_CONFIG"
+        fi
+    fi
+    
+    # Add or update CMA overlay
+    CMA_SETTING="dtoverlay=cma,cma-${GPU_MEMORY}"
+    
+    if ! grep -q "^dtoverlay=cma,cma-${GPU_MEMORY}" "$BOOT_CONFIG" || [[ "$FORCE" == "true" ]]; then
+        echo -e "${YELLOW}  → Setting CMA pool to ${GPU_MEMORY}MB for Air Player${NC}"
+        log_message "Adding ${CMA_SETTING} to config.txt"
+        
+        if [[ "$DRY_RUN" == "false" ]]; then
+            # Remove any existing CMA overlay
+            sudo sed -i '/^dtoverlay=cma/d' "$BOOT_CONFIG"
+            
+            # Add CMA overlay after [all] section
+            if grep -q "^\[all\]" "$BOOT_CONFIG"; then
+                sudo sed -i "/^\[all\]/a $CMA_SETTING" "$BOOT_CONFIG"
+            else
+                echo "$CMA_SETTING" | sudo tee -a "$BOOT_CONFIG" > /dev/null
+            fi
+            
+            log_message "CMA overlay configured: ${GPU_MEMORY}MB pool"
+            CHANGES_MADE=true
+        else
+            echo -e "${CYAN}    Would add: $CMA_SETTING${NC}"
+        fi
+    else
+        echo -e "${GREEN}  ✓ CMA already configured for Pi 5 (${GPU_MEMORY}MB)${NC}"
+        log_message "CMA already configured"
+    fi
+    
 else
-    echo -e "${GREEN}  ✓ GPU memory already set to ${GPU_MEMORY}MB${NC}"
+    # ========================================================================
+    # RASPBERRY PI 4 (and earlier): Use traditional gpu_mem
+    # ========================================================================
+    echo -e "${YELLOW}  → Configuring GPU memory for Raspberry Pi 4 (gpu_mem)${NC}"
+    log_message "Raspberry Pi 4 or earlier detected - using gpu_mem"
+    
+    # Check current gpu_mem value
+    CURRENT_GPU_MEM=$(grep "^gpu_mem=" "$BOOT_CONFIG" 2>/dev/null | cut -d= -f2 || echo "")
+    
+    if [[ "$CURRENT_GPU_MEM" != "$GPU_MEMORY" ]] || [[ "$FORCE" == "true" ]]; then
+        echo -e "${YELLOW}  → Setting GPU memory to ${GPU_MEMORY}MB${NC}"
+        log_message "Setting gpu_mem=${GPU_MEMORY} in config.txt"
+        
+        if [[ "$DRY_RUN" == "false" ]]; then
+            # Remove all existing gpu_mem entries
+            sudo sed -i '/^gpu_mem=/d' "$BOOT_CONFIG"
+            
+            # Add gpu_mem after [all] section
+            if grep -q "^\[all\]" "$BOOT_CONFIG"; then
+                sudo sed -i "/^\[all\]/a gpu_mem=${GPU_MEMORY}" "$BOOT_CONFIG"
+            else
+                echo "gpu_mem=${GPU_MEMORY}" | sudo tee -a "$BOOT_CONFIG" > /dev/null
+            fi
+            
+            log_message "GPU memory configured: ${GPU_MEMORY}MB"
+            CHANGES_MADE=true
+        else
+            echo -e "${CYAN}    Would set gpu_mem=${GPU_MEMORY}${NC}"
+        fi
+    else
+        echo -e "${GREEN}  ✓ GPU memory already set to ${GPU_MEMORY}MB${NC}"
+        log_message "GPU memory already configured"
+    fi
 fi
 
 # Check/add disable-wifi
@@ -519,6 +658,7 @@ update_state "gpu_memory" "$GPU_MEMORY"
 # ============================================================================
 # 7. AIR PLAYER INSTALLATION
 # ============================================================================
+log_message "=== SECTION 7: Air Player Installation ==="
 echo -e "${BLUE}[7/10] Checking Air Player Installation...${NC}"
 
 if [[ ! -f "${SCRIPT_DIR}/${AIRPLAYER_ZIP_NAME}" ]]; then
@@ -585,6 +725,7 @@ update_state "airplayer_installed" "$(date +%Y%m%d)"
 # ============================================================================
 # 8. DISPLAY CONFIGURATION
 # ============================================================================
+log_message "=== SECTION 8: Display Configuration ==="
 echo -e "${BLUE}[8/10] Updating Display Configuration...${NC}"
 
 OPENBOX_DIR="${SYSTEM_USER_HOME}/.config/openbox"
@@ -601,12 +742,27 @@ AUTOSTART_CONTENT="#!/bin/bash
 # Generated by Air Player Appliance Builder
 # Generated: $(date)
 #
+
+# Wait for displays to be detected
+sleep 2
+
+# Detect which displays are actually connected
+export DISPLAY=:0
+CONNECTED_DISPLAYS=\$(xrandr | grep ' connected' | awk '{print \$1}')
+
+echo \"Detected displays: \$CONNECTED_DISPLAYS\" >> /tmp/display-config.log
+
 "
 
 # Primary Display
 if [[ "${PRIMARY_DISPLAY_ENABLED:-yes}" == "yes" ]]; then
     AUTOSTART_CONTENT+="# Primary Display - Main Panel
-xrandr --output ${PRIMARY_DISPLAY} --mode ${PRIMARY_RESOLUTION} --rotate ${PRIMARY_ROTATION} --primary
+if echo \"\$CONNECTED_DISPLAYS\" | grep -q \"${PRIMARY_DISPLAY}\"; then
+    xrandr --output ${PRIMARY_DISPLAY} --mode ${PRIMARY_RESOLUTION} --rotate ${PRIMARY_ROTATION} --primary
+    echo \"Configured ${PRIMARY_DISPLAY}\" >> /tmp/display-config.log
+else
+    echo \"WARNING: ${PRIMARY_DISPLAY} not connected\" >> /tmp/display-config.log
+fi
 
 "
 fi
@@ -614,7 +770,12 @@ fi
 # Secondary Display
 if [[ ${NUM_DISPLAYS} -ge 2 ]] && [[ "${SECONDARY_DISPLAY_ENABLED:-yes}" == "yes" ]]; then
     AUTOSTART_CONTENT+="# Secondary Display
-xrandr --output ${SECONDARY_DISPLAY} --mode ${SECONDARY_RESOLUTION} --rotate ${SECONDARY_ROTATION} --${SECONDARY_POSITION} ${PRIMARY_DISPLAY}
+if echo \"\$CONNECTED_DISPLAYS\" | grep -q \"${SECONDARY_DISPLAY}\"; then
+    xrandr --output ${SECONDARY_DISPLAY} --mode ${SECONDARY_RESOLUTION} --rotate ${SECONDARY_ROTATION} --${SECONDARY_POSITION} ${PRIMARY_DISPLAY}
+    echo \"Configured ${SECONDARY_DISPLAY}\" >> /tmp/display-config.log
+else
+    echo \"WARNING: ${SECONDARY_DISPLAY} not connected\" >> /tmp/display-config.log
+fi
 
 "
 fi
@@ -625,14 +786,19 @@ if [[ ${NUM_DISPLAYS} -ge 3 ]] && [[ "${TERTIARY_DISPLAY_ENABLED:-no}" == "yes" 
     [[ "${TERTIARY_POSITION_REFERENCE}" == "PRIMARY" ]] && ref_display="${PRIMARY_DISPLAY}"
     
     AUTOSTART_CONTENT+="# Tertiary Display - DSI Screen
-xrandr --output ${TERTIARY_DISPLAY} --mode ${TERTIARY_RESOLUTION} --rotate ${TERTIARY_ROTATION} --${TERTIARY_POSITION} ${ref_display}
+if echo \"\$CONNECTED_DISPLAYS\" | grep -q \"${TERTIARY_DISPLAY}\"; then
+    xrandr --output ${TERTIARY_DISPLAY} --mode ${TERTIARY_RESOLUTION} --rotate ${TERTIARY_ROTATION} --${TERTIARY_POSITION} ${ref_display}
+    echo \"Configured ${TERTIARY_DISPLAY}\" >> /tmp/display-config.log
+else
+    echo \"WARNING: ${TERTIARY_DISPLAY} not connected\" >> /tmp/display-config.log
+fi
 
 "
 fi
 
 # Launch Air Player
-AUTOSTART_CONTENT+="# Wait for displays to stabilize
-sleep 2
+AUTOSTART_CONTENT+="# Wait for display configuration to complete
+sleep 1
 
 # Launch Air Player (automatically detects and uses all displays)
 cd ${AIRPLAYER_INSTALL_DIR}
@@ -655,6 +821,7 @@ update_state "display_config" "$(date +%Y%m%d)"
 # ============================================================================
 # 9. SYSTEM HARDENING & OPTIMIZATION
 # ============================================================================
+log_message "=== SECTION 9: System Hardening ==="
 echo -e "${BLUE}[9/10] Checking System Hardening...${NC}"
 
 # Volatile logging
@@ -729,27 +896,130 @@ else
     echo -e "${GREEN}  ✓ noatime already in fstab${NC}"
 fi
 
-# Disable swap
-if [[ -n "$(sudo swapon --show)" ]] || [[ "$FORCE" == "true" ]]; then
-    echo -e "${YELLOW}  → Disabling swap${NC}"
+# ============================================================================
+# DISABLE SWAP COMPLETELY (including zram for Ubuntu Server 24.04)
+# ============================================================================
+log_message "Checking swap configuration"
+echo -e "${YELLOW}  → Checking swap configuration${NC}"
+
+SWAP_ACTIVE=false
+SWAP_CONFIGURED=false
+ZRAM_ACTIVE=false
+
+# Check if swap is currently active
+if [[ -n "$(sudo swapon --show)" ]]; then
+    SWAP_ACTIVE=true
+    # Check specifically for zram
+    if sudo swapon --show | grep -q zram; then
+        ZRAM_ACTIVE=true
+    fi
+fi
+
+# Check if swap is configured in fstab
+if grep -q "^[^#].*swap" "$FSTAB" 2>/dev/null; then
+    SWAP_CONFIGURED=true
+fi
+
+# Check if dphys-swapfile exists and is enabled
+DPHYS_EXISTS=false
+if systemctl list-unit-files 2>/dev/null | grep -q dphys-swapfile; then
+    DPHYS_EXISTS=true
+fi
+
+# Check if swap file exists
+SWAP_FILE_EXISTS=false
+if [[ -f /var/swap ]] || [[ -f /swap ]] || [[ -f /swapfile ]]; then
+    SWAP_FILE_EXISTS=true
+fi
+
+# Check for zram-related services/packages
+ZRAM_EXISTS=false
+if systemctl list-unit-files 2>/dev/null | grep -q zramswap; then
+    ZRAM_EXISTS=true
+fi
+if dpkg -l 2>/dev/null | grep -q zram-config; then
+    ZRAM_EXISTS=true
+fi
+
+if [[ "$SWAP_ACTIVE" == "true" ]] || [[ "$SWAP_CONFIGURED" == "true" ]] || [[ "$DPHYS_EXISTS" == "true" ]] || [[ "$SWAP_FILE_EXISTS" == "true" ]] || [[ "$ZRAM_ACTIVE" == "true" ]] || [[ "$ZRAM_EXISTS" == "true" ]] || [[ "$FORCE" == "true" ]]; then
+    echo -e "${YELLOW}  → Disabling swap completely (including zram)${NC}"
+    log_message "Disabling swap (active=$SWAP_ACTIVE, configured=$SWAP_CONFIGURED, dphys=$DPHYS_EXISTS, files=$SWAP_FILE_EXISTS, zram=$ZRAM_ACTIVE)"
     
     if [[ "$DRY_RUN" == "false" ]]; then
+        # Turn off any active swap immediately
+        log_message "Running: swapoff -a"
         sudo swapoff -a 2>/dev/null || true
+        
+        # Disable zram specifically (Ubuntu Server 24.04 uses this)
+        if [[ "$ZRAM_ACTIVE" == "true" ]] || [[ "$ZRAM_EXISTS" == "true" ]]; then
+            echo -e "${YELLOW}  → Disabling zram swap (Ubuntu Server 24.04)${NC}"
+            log_message "Disabling zram swap"
+            
+            # Turn off zram swap
+            sudo swapoff /dev/zram0 2>/dev/null || true
+            
+            # Stop and mask zramswap service
+            sudo systemctl stop zramswap.service 2>/dev/null || true
+            sudo systemctl disable zramswap.service 2>/dev/null || true
+            sudo systemctl mask zramswap.service 2>/dev/null || true
+            
+            # Remove zram-config package if present
+            if dpkg -l 2>/dev/null | grep -q zram-config; then
+                log_message "Removing zram-config package"
+                sudo apt-get remove -y --purge zram-config 2>/dev/null || true
+                sudo apt-get autoremove -y 2>/dev/null || true
+            fi
+            
+            # Blacklist zram kernel module
+            if [[ ! -f /etc/modprobe.d/blacklist-zram.conf ]]; then
+                echo "blacklist zram" | sudo tee /etc/modprobe.d/blacklist-zram.conf > /dev/null
+                log_message "Blacklisted zram kernel module"
+            fi
+            
+            # Remove zram module if currently loaded
+            sudo modprobe -r zram 2>/dev/null || true
+            
+            # Mask systemd swap targets
+            sudo systemctl mask swap.target 2>/dev/null || true
+            sudo systemctl mask dev-zram0.swap 2>/dev/null || true
+            
+            log_message "zram swap disabled and blacklisted"
+        fi
+        
+        # Comment out swap entries in fstab
         backup_file "$FSTAB"
         sudo sed -i '/^[^#].*swap/ s/^/#/' "$FSTAB"
         
-        # Disable dphys-swapfile if present
-        if systemctl list-unit-files | grep -q dphys-swapfile; then
-            sudo systemctl disable dphys-swapfile.service 2>/dev/null || true
+        # Disable and mask dphys-swapfile service (prevents re-enabling)
+        if [[ "$DPHYS_EXISTS" == "true" ]]; then
             sudo systemctl stop dphys-swapfile.service 2>/dev/null || true
+            sudo systemctl disable dphys-swapfile.service 2>/dev/null || true
+            sudo systemctl mask dphys-swapfile.service 2>/dev/null || true
         fi
         
-        # Remove swap file
-        sudo rm -f /var/swap 2>/dev/null || true
+        # Disable swap configuration file
+        if [[ -f /etc/dphys-swapfile ]]; then
+            sudo sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=0/' /etc/dphys-swapfile
+        fi
+        
+        # Remove swap files
+        sudo rm -f /var/swap /swap /swapfile 2>/dev/null || true
+        
+        # Double-check it's off
+        if [[ -n "$(sudo swapon --show)" ]]; then
+            echo -e "${RED}  ✗ Warning: Swap still active after disable attempt${NC}"
+            log_message "WARNING: Swap still active after disable"
+        else
+            echo -e "${GREEN}  ✓ All swap disabled (including zram)${NC}"
+            log_message "All swap successfully disabled"
+        fi
         
         CHANGES_MADE=true
     else
-        echo -e "${CYAN}    Would disable swap${NC}"
+        echo -e "${CYAN}    Would disable swap completely${NC}"
+        echo -e "${CYAN}    Would disable zram (Ubuntu Server 24.04)${NC}"
+        echo -e "${CYAN}    Would mask dphys-swapfile service${NC}"
+        echo -e "${CYAN}    Would remove swap files${NC}"
     fi
 else
     echo -e "${GREEN}  ✓ Swap already disabled${NC}"
@@ -770,14 +1040,13 @@ if [[ ! -f "$SWAPPINESS_CONF" ]] || ! grep -q "vm.swappiness=0" "$SWAPPINESS_CON
 else
     echo -e "${GREEN}  ✓ Swappiness already set to 0${NC}"
 fi
-
 # Disable IPv6 via sysctl
 IPV6_CONF="/etc/sysctl.d/99-disable-ipv6.conf"
 if [[ ! -f "$IPV6_CONF" ]] || [[ "$FORCE" == "true" ]]; then
     echo -e "${YELLOW}  → Disabling IPv6 via sysctl${NC}"
     
     if [[ "$DRY_RUN" == "false" ]]; then
-        cat | sudo tee "$IPV6_CONF" > /dev/null << 'IPV6EOF'
+        sudo tee "$IPV6_CONF" > /dev/null << 'IPV6EOF'
 net.ipv6.conf.all.disable_ipv6 = 1
 net.ipv6.conf.default.disable_ipv6 = 1
 net.ipv6.conf.lo.disable_ipv6 = 1
@@ -826,7 +1095,7 @@ if [[ ! -f "$FAIL2BAN_CONF" ]] || [[ "$FORCE" == "true" ]]; then
     backup_file "$FAIL2BAN_CONF"
     
     if [[ "$DRY_RUN" == "false" ]]; then
-        cat | sudo tee "$FAIL2BAN_CONF" > /dev/null << EOF
+        sudo tee "$FAIL2BAN_CONF" > /dev/null << EOF
 [DEFAULT]
 bantime = 3600
 findtime = 600
@@ -890,7 +1159,31 @@ echo -e "${GREEN}  ✓ System hardening checked${NC}"
 # ============================================================================
 # 10. FINAL STEPS
 # ============================================================================
+log_message "=== SECTION 10: Finalization ==="
 echo -e "${BLUE}[10/10] Finalizing...${NC}"
+
+# Verify critical settings
+echo -e "${YELLOW}  → Verifying critical settings${NC}"
+
+# Verify swap is actually off
+if [[ "$DRY_RUN" == "false" ]]; then
+    SWAP_CHECK=$(sudo swapon --show)
+    if [[ -n "$SWAP_CHECK" ]]; then
+        echo -e "${RED}  ✗ WARNING: Swap is still active!${NC}"
+        echo -e "${YELLOW}    Active swap: $SWAP_CHECK${NC}"
+        echo -e "${YELLOW}    You may need to reboot for changes to take effect${NC}"
+    else
+        echo -e "${GREEN}  ✓ Swap verified disabled${NC}"
+    fi
+    
+    # Verify swappiness
+    SWAPPINESS=$(cat /proc/sys/vm/swappiness)
+    if [[ "$SWAPPINESS" != "0" ]]; then
+        echo -e "${YELLOW}  ⚠ Swappiness is $SWAPPINESS (should be 0, will apply on reboot)${NC}"
+    else
+        echo -e "${GREEN}  ✓ Swappiness verified: 0${NC}"
+    fi
+fi
 
 # Create installation marker
 MARKER_FILE="${SYSTEM_USER_HOME}/.airplayer-installed"
@@ -907,6 +1200,10 @@ fi
 
 update_state "last_run" "$(date '+%Y%m%d_%H%M%S')"
 
+log_message "=== SETUP COMPLETED ==="
+log_message "Changes made: $CHANGES_MADE"
+log_message "Completed at: $(date)"
+
 echo ""
 echo -e "${GREEN}"
 cat << 'EOF'
@@ -915,6 +1212,11 @@ cat << 'EOF'
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
+
+# Show log file location
+echo -e "${CYAN}Setup log saved to: $SETUP_LOG${NC}"
+echo -e "${CYAN}Latest log link: $SETUP_LOG_LINK${NC}"
+echo ""
 
 if [[ "$DRY_RUN" == "true" ]]; then
     echo -e "${YELLOW}*** DRY RUN MODE - No changes were made ***${NC}"
@@ -934,9 +1236,28 @@ elif [[ "$CHANGES_MADE" == "true" ]]; then
     echo "  - Air Player will start automatically"
     echo "  - Connect via: ssh ${SSH_ALLOWED_USER}@${NETWORK_IP}"
     echo ""
-    read -p "Press Enter to reboot now, or Ctrl+C to reboot later..."
+    log_message "Changes were made - reboot required"
+    log_message "Waiting for user confirmation or timeout (10 seconds)"
+    
+    # Use read with timeout to prevent hanging
+    echo "Rebooting in 10 seconds... (Press Ctrl+C to cancel)"
+    
+    # Try read with timeout (bash 4+)
+    if read -t 10 -p "Press Enter to reboot immediately, or wait..."; then
+        echo ""
+        echo "Rebooting now..."
+        log_message "User pressed Enter - rebooting immediately"
+    else
+        echo ""
+        echo "Timeout - rebooting automatically..."
+        log_message "Timeout reached - rebooting automatically"
+    fi
+    
+    sleep 2
+    log_message "Executing: sudo reboot"
     sudo reboot
 else
+    log_message "No changes needed - system already configured"
     echo "No changes were needed - system already configured correctly."
     echo ""
     echo "Current configuration:"

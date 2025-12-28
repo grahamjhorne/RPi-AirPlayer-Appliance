@@ -1,0 +1,99 @@
+#cloud-config
+# ============================================================================
+# Air Player Appliance - Ubuntu Server Cloud-Init Configuration
+# ============================================================================
+# Production configuration: SSH key authentication ONLY
+# No console password - maximum security
+# 
+# BEFORE FIRST BOOT - REQUIRED STEPS:
+# 1. Image SD card with Ubuntu Server 24.04 LTS (64-bit)
+# 2. Mount the "bootfs" or "system-boot" partition on your computer
+# 3. Edit THIS FILE (user-data) with a text editor
+# 4. Add your SSH public key (see section below)
+# 5. Optionally customize keyboard/locale for your region
+# 6. Save, eject safely, and boot the Pi
+#
+# After ~90 seconds, the Pi will display its IP address on screen
+# Connect via: ssh airman@<IP_ADDRESS>
+# ============================================================================
+
+# System hostname
+hostname: instruments
+
+# Keyboard layout (GB/UK - customize if needed)
+keyboard:
+  model: pc105
+  layout: gb
+
+# Locale and timezone (UK - customize if needed)
+locale: en_GB.UTF-8
+timezone: Europe/London
+
+# ============================================================================
+# USER CONFIGURATION - SSH KEY AUTHENTICATION ONLY
+# ============================================================================
+# CRITICAL: You MUST add your SSH public key below
+# There is NO password - SSH key authentication ONLY
+# No console access - maximum security headless server
+#
+# To generate SSH key pair:
+#   ssh-keygen -t ed25519 -C "your_email@example.com"
+#
+# Then copy contents of ~/.ssh/id_ed25519.pub and paste below
+#
+# YAML FORMATTING IS STRICT:
+#   - Use spaces, NOT tabs
+#   - Key must be on the line AFTER the hyphen
+#   - Format: "      - ssh-ed25519 AAAA... email@example.com"
+#
+# See: SSH-KEY-GUIDE.md for detailed instructions
+# ============================================================================
+
+users:
+  - name: airman
+    gecos: Air Player Administrator
+    groups: [users, adm, dialout, audio, plugdev, netdev, video, sudo]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    shell: /bin/bash
+    # Account locked - no console password (SSH key only)
+    # Maximum security - SSH key required
+    lock_passwd: true
+    # REPLACE THIS ENTIRE LINE with your SSH public key:
+    ssh_authorized_keys:
+      - ssh-ed25519 REPLACE_THIS_ENTIRE_LINE_WITH_YOUR_PUBLIC_KEY
+
+# ============================================================================
+# SSH CONFIGURATION - KEY AUTHENTICATION ONLY
+# ============================================================================
+# Disable password authentication over SSH (keys only)
+# This prevents brute-force attacks
+ssh_pwauth: false
+disable_root: true
+
+# ============================================================================
+# PACKAGE MANAGEMENT
+# ============================================================================
+package_update: false
+package_upgrade: false
+
+# Install minimal required packages
+packages:
+  - openssh-server
+  - openssh-sftp-server
+
+# ============================================================================
+# SYSTEM CONFIGURATION
+# ============================================================================
+runcmd:
+  - [ systemctl, enable, --now, ssh ]
+  # Fix hostname in /etc/hosts - delete any 127.0.1.1 line, then add correct one
+  - [ sed, -i, '/^127\.0\.1\.1/d', /etc/hosts ]
+  - [ sh, -c, "echo '127.0.1.1 instruments' >> /etc/hosts" ]
+
+# ============================================================================
+# REBOOT AFTER CLOUD-INIT
+# ============================================================================
+power_state:
+  mode: reboot
+  timeout: 180
+  condition: true
