@@ -292,7 +292,14 @@ log_message "=== SECTION 2: SSH Hardening ==="
 echo -e "${BLUE}[2/10] Checking SSH Configuration...${NC}"
 
 SSH_CONFIG="/etc/ssh/sshd_config"
-SSH_CONTENT="Include /etc/ssh/sshd_config.d/*.conf
+
+# Remove cloud-init SSH config overrides that conflict with our configuration
+if [[ "$DRY_RUN" == "false" ]]; then
+    sudo rm -f /etc/ssh/sshd_config.d/*.conf 2>/dev/null || true
+    log_message "Removed cloud-init SSH config overrides"
+fi
+
+SSH_CONTENT="
 Port ${SSH_PORT}
 AddressFamily inet
 HostKey /etc/ssh/ssh_host_ed25519_key
@@ -324,6 +331,25 @@ if file_needs_update "$SSH_CONFIG" "$SSH_CONTENT" || [[ "$FORCE" == "true" ]]; t
     
     if [[ "$DRY_RUN" == "false" ]]; then
         echo "$SSH_CONTENT" | sudo tee "$SSH_CONFIG" > /dev/null
+        
+        # Ensure SSH privilege separation directory exists (required for sshd to start)
+        sudo mkdir -p /run/sshd
+        sudo chmod 755 /run/sshd
+        log_message "Created /run/sshd directory"
+        
+        # Test SSH configuration before proceeding
+        if sudo /usr/sbin/sshd -t 2>/dev/null; then
+            log_message "SSH configuration validated successfully"
+        else
+            log_message "ERROR: SSH configuration validation failed!"
+            echo -e "${RED}  ✗ SSH config validation failed - restoring backup${NC}"
+            backup_file="${SSH_CONFIG}.bak"
+            if [[ -f "$backup_file" ]]; then
+                sudo cp "$backup_file" "$SSH_CONFIG" 2>/dev/null || true
+            fi
+            exit 1
+        fi
+        
         # Don't restart SSH if we're connected via SSH - will apply on next reboot
         echo -e "${CYAN}    Note: SSH config will apply on next reboot/restart${NC}"
         CHANGES_MADE=true
@@ -345,9 +371,9 @@ echo -e "${BLUE}[3/10] Checking System Packages...${NC}"
 
 REQUIRED_PACKAGES=(
     xserver-xorg-core xserver-xorg xinit x11-xserver-utils
-    libzip5 libgtk-3-0 libfreeimage3 libcurl4 libusb-1.0-0
+    libzip5 libgtk-3-0t64 libfreeimage3 libcurl4t64 libusb-1.0-0
     libcanberra-gtk3-module libegl1 libgles2
-    openbox xterm unclutter ufw fail2ban
+    openbox xterm unclutter ufw fail2ban bc
 )
 
 MISSING_PACKAGES=()
@@ -468,7 +494,7 @@ fi
 
 # Xorg configuration
 XORG_CONF_DIR="/etc/X11/xorg.conf.d"
-XORG_CONF_FILE="$XORG_CONF_DIR/10-vc4.conf"zip airplayer-setup.zip setup.sh setup.properties AirPlayer.zip diagnostics.sh
+XORG_CONF_FILE="$XORG_CONF_DIR/10-vc4.conf"
 XORG_CONTENT='Section "Device"
     Identifier "VC4 Graphics"
     Driver "modesetting"
@@ -731,11 +757,11 @@ echo -e "${BLUE}[8/10] Updating Display Configuration...${NC}"
 OPENBOX_DIR="${SYSTEM_USER_HOME}/.config/openbox"
 AUTOSTART_FILE="$OPENBOX_DIR/autostart"
 
-echo -e "${YELLOW}  → Regenerating Openbox autostart (display config from properties)${NC}"
+echo -e "${YELLOW}  → Checking Openbox autostart configuration${NC}"
 
 mkdir -p "$OPENBOX_DIR"
 
-# Always regenerate display configuration from current properties
+# Generate display configuration from current properties
 AUTOSTART_CONTENT="#!/bin/bash
 #
 # Air Player Display Configuration
@@ -804,16 +830,22 @@ sleep 1
 cd ${AIRPLAYER_INSTALL_DIR}
 ./AirPlayer &"
 
-if [[ "$DRY_RUN" == "false" ]]; then
-    backup_file "$AUTOSTART_FILE"
-    echo "$AUTOSTART_CONTENT" > "$AUTOSTART_FILE"
-    chmod +x "$AUTOSTART_FILE"
-    CHANGES_MADE=true
-    echo -e "${GREEN}  ✓ Display configuration updated${NC}"
+# Check if file needs update
+if file_needs_update "$AUTOSTART_FILE" "$AUTOSTART_CONTENT" || [[ "$FORCE" == "true" ]]; then
+    if [[ "$DRY_RUN" == "false" ]]; then
+        backup_file "$AUTOSTART_FILE"
+        echo "$AUTOSTART_CONTENT" > "$AUTOSTART_FILE"
+        chmod +x "$AUTOSTART_FILE"
+        CHANGES_MADE=true
+        echo -e "${GREEN}  ✓ Display configuration updated${NC}"
+    else
+        echo -e "${CYAN}    Would write: $AUTOSTART_FILE${NC}"
+    fi
 else
-    echo -e "${CYAN}    Would write: $AUTOSTART_FILE${NC}"
-    echo -e "${CYAN}    Displays: ${NUM_DISPLAYS}${NC}"
+    echo -e "${GREEN}  ✓ Display configuration already correct${NC}"
 fi
+
+echo -e "${CYAN}    Displays: ${NUM_DISPLAYS}${NC}"
 
 update_state "num_displays" "$NUM_DISPLAYS"
 update_state "display_config" "$(date +%Y%m%d)"
@@ -941,7 +973,46 @@ if dpkg -l 2>/dev/null | grep -q zram-config; then
     ZRAM_EXISTS=true
 fi
 
-if [[ "$SWAP_ACTIVE" == "true" ]] || [[ "$SWAP_CONFIGURED" == "true" ]] || [[ "$DPHYS_EXISTS" == "true" ]] || [[ "$SWAP_FILE_EXISTS" == "true" ]] || [[ "$ZRAM_ACTIVE" == "true" ]] || [[ "$ZRAM_EXISTS" == "true" ]] || [[ "$FORCE" == "true" ]]; then
+# Check if zram is properly disabled (blacklisted)
+ZRAM_BLACKLISTED=false
+if [[ -f /etc/modprobe.d/blacklist-zram.conf ]] && grep -q "blacklist zram" /etc/modprobe.d/blacklist-zram.conf 2>/dev/null; then
+    ZRAM_BLACKLISTED=true
+fi
+
+# Check if zram module is loaded (not necessarily a problem if blacklisted)
+ZRAM_MODULE_LOADED=false
+if lsmod | grep -q "^zram "; then
+    ZRAM_MODULE_LOADED=true
+fi
+
+# Determine if swap actually needs disabling
+NEEDS_SWAP_DISABLE=false
+
+if [[ "$SWAP_ACTIVE" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: swap is active"
+elif [[ "$SWAP_CONFIGURED" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: configured in fstab"
+elif [[ "$DPHYS_EXISTS" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: dphys-swapfile service exists"
+elif [[ "$SWAP_FILE_EXISTS" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: swap files exist"
+elif [[ "$ZRAM_ACTIVE" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: zram swap is active"
+elif [[ "$ZRAM_MODULE_LOADED" == "true" ]] && [[ "$ZRAM_BLACKLISTED" == "false" ]]; then
+    # Module loaded but not blacklisted = needs proper disabling
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: zram module loaded but not blacklisted"
+elif [[ "$FORCE" == "true" ]]; then
+    NEEDS_SWAP_DISABLE=true
+    log_message "Swap disable needed: force mode"
+fi
+
+if [[ "$NEEDS_SWAP_DISABLE" == "true" ]]; then
     echo -e "${YELLOW}  → Disabling swap completely (including zram)${NC}"
     log_message "Disabling swap (active=$SWAP_ACTIVE, configured=$SWAP_CONFIGURED, dphys=$DPHYS_EXISTS, files=$SWAP_FILE_EXISTS, zram=$ZRAM_ACTIVE)"
     
@@ -1060,8 +1131,50 @@ else
 fi
 
 # Configure firewall
+echo -e "${YELLOW}  → Checking firewall configuration${NC}"
+
+# Check if firewall is already configured correctly
+UFW_NEEDS_CONFIG=false
+
+# Check if UFW is enabled
+if ! sudo ufw status 2>/dev/null | grep -q "Status: active"; then
+    UFW_NEEDS_CONFIG=true
+    log_message "Firewall needs config: not active"
+fi
+
+# Check if IPv6 is disabled in ufw.conf
 UFW_CONF="/etc/ufw/ufw.conf"
-if ! grep -q "^IPV6=no" "$UFW_CONF" || [[ "$FORCE" == "true" ]]; then
+if [[ "$UFW_NEEDS_CONFIG" == "false" ]]; then
+    if ! grep -q "^IPV6=no" "$UFW_CONF" 2>/dev/null; then
+        UFW_NEEDS_CONFIG=true
+        log_message "Firewall needs config: IPv6 not disabled"
+    fi
+fi
+
+# Check if critical rules exist
+if [[ "$UFW_NEEDS_CONFIG" == "false" ]]; then
+    UFW_STATUS=$(sudo ufw status numbered 2>/dev/null)
+    
+    # Check SSH rule
+    if ! echo "$UFW_STATUS" | grep -q "${SSH_PORT}/tcp.*ALLOW.*${FIREWALL_ALLOWED_NETWORK}"; then
+        UFW_NEEDS_CONFIG=true
+        log_message "Firewall needs config: SSH rule missing or incorrect"
+    fi
+    
+    # Check DNS rule
+    if ! echo "$UFW_STATUS" | grep -q "53/udp.*ALLOW OUT"; then
+        UFW_NEEDS_CONFIG=true
+        log_message "Firewall needs config: DNS rule missing"
+    fi
+    
+    # Check NTP rule
+    if ! echo "$UFW_STATUS" | grep -q "123/udp.*ALLOW OUT"; then
+        UFW_NEEDS_CONFIG=true
+        log_message "Firewall needs config: NTP rule missing"
+    fi
+fi
+
+if [[ "$UFW_NEEDS_CONFIG" == "true" ]] || [[ "$FORCE" == "true" ]]; then
     echo -e "${YELLOW}  → Configuring firewall${NC}"
     backup_file "$UFW_CONF"
     
@@ -1208,7 +1321,7 @@ echo ""
 echo -e "${GREEN}"
 cat << 'EOF'
 ╔═══════════════════════════════════════════════════════════════════╗
-║                   Configuration Complete!                          ║
+║                   Configuration Complete!                         ║
 ╚═══════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
